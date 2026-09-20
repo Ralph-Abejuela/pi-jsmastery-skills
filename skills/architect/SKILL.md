@@ -1,6 +1,6 @@
 ---
 name: architect
-allowed-tools: Bash, Read, Grep, Glob, Write, Edit, Agent, AskUserQuestion
+allowed-tools: pwsh, read, write, edit, agent, ask_user_question
 description: "Run /architect when choosing between approaches, designing a feature or page, picking a tech stack, or when /develop says a decision is owed, anytime a load bearing technical decision is unmade. Asks deep questions, recommends an answer, and writes a build spec to docs/specs/. Owns all spec files."
 ---
 
@@ -41,8 +41,8 @@ Writes no code. Never updates `AGENTS.md`/`CLAUDE.md` (/sync owns that).
 
 The main thread runs the conversation and writes the spec; it never hands the writing or any fix to a subagent. Every subagent it spawns is read only and never inherits the session model:
 
-- **Read the codebase** (cheapest model, Claude Code `haiku`): a read only scan of existing code when the repo is large (ENHANCEMENT/CROSS-CUTTING). Claude Code: the `scout` type. Returns a compact map, never file dumps.
-- **Fetch from the web** (cheapest model, Claude Code `haiku`): the current tool landscape check and the Agent Skill / MCP discovery, both during the design conversation (Stage c), when a decision needs current facts. Claude Code: the `researcher` type. Returns a compact summary, never raw pages.
+- **Read the codebase** (cheapest model, pi `haiku`): a read only scan of existing code when the repo is large (ENHANCEMENT/CROSS-CUTTING). pi: the `scout` type. Returns a compact map, never file dumps.
+- **Fetch from the web** (cheapest model, pi `haiku`): the current tool landscape check and the Agent Skill / MCP discovery, both during the design conversation (Stage c), when a decision needs current facts. pi: the `researcher` type. Returns a compact summary, never raw pages.
 - **Cross check the drafted spec** (its primary job is decision completeness: finding values an action must produce whose source the spec never names, and decisions the builder would otherwise invent): a read only pass that reads the finished spec and returns a critique, writing nothing. `/architect` **always asks** whether to run it (never runs or skips it on the engineer's behalf), recommending `Another model` strongly at `GA`/`Beta` (the tiers where these bugs live), offering it at `Alpha`, and recommending `Skip` at `Prototype`; any gap it finds is presented to the engineer with a recommended fix for them to decide, not auto resolved. See *After the spec is written*.
 
 Web fetching happens once, when a decision needs it (the Stage (c) landscape and tool discovery checks). The links it returns go into the spec's References for a human to follow; the AI never fetches them again (not in the cross check, `/develop`, or `/audit`).

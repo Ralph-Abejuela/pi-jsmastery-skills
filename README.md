@@ -79,7 +79,7 @@ The gate is layered, not magic: `/architect` names the source of every value a f
 | App code | your source tree | develop |
 | Human docs | PR body, CHANGELOG.md, `docs/releases/`, `docs/postmortems/` | document |
 
-If `docs/` is a published docs site, these move to `.workflow/` so they do not ship with your site. Because state lives in files, each skill suggests `/clear` at handoffs, so a fresh session reads from disk again and long chats do not pile up cost.
+If `docs/` is a published docs site, these move to `.workflow/` so they do not ship with your site. Because state lives in files, each skill suggests `/new` at handoffs, so a fresh session reads from disk again and long chats do not pile up cost.
 
 ## Skill reference
 

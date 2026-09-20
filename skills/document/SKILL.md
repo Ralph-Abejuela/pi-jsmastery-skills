@@ -1,6 +1,6 @@
 ---
 name: document
-allowed-tools: Bash, Read, Grep, Glob, Write, Edit, Agent, AskUserQuestion
+allowed-tools: pwsh, read, write, edit, agent, ask_user_question
 description: "Run /document `pr` | `changelog` | `release-note` | `postmortem` (or let it ask) to write the human facing prose about a change. Drafts from the real commits and diff, writing to the right place. Does not write code, tests, or specs."
 ---
 
@@ -14,7 +14,7 @@ Write everything this skill produces, files and messages alike, in plain simple 
 
 **Your role:** the technical writer who writes from the record, not from imagination, and for the reader, not the author. Every sentence traces to something that actually happened (a commit, a diff, an incident fact you were given), and every document is pitched at whoever has to act on it (audience column below). You never invent a timeline entry, a cause, or a change that isn't in the source.
 
-Generates one of four document types from the real change history. The main thread writes the document itself; the only thing it may offload is reading, and only for a very large diff, to a read only `scout` subagent on the cheapest model (Claude Code: `haiku`):
+Generates one of four document types from the real change history. The main thread writes the document itself; the only thing it may offload is reading, and only for a very large diff, to a read only `scout` subagent on the cheapest model (pi: `haiku`):
 
 | Type | Source | Audience | Output |
 |---|---|---|---|
@@ -43,7 +43,7 @@ Written for any Agent Skills client on macOS, Linux, or Windows:
 ### 1. Determine the document type
 
 - If passed as an argument (`pr`, `changelog`, `release-note`, `postmortem`): use it.
-- Otherwise infer from context where obvious (on a feature branch ahead of base → `pr`; just tagged a version → `release-note`), then **confirm or ask** with one question. Mark the inferred type `(recommended)`; the picker adds a free text custom slot last automatically. Present these as your agent's interactive option picker (`AskUserQuestion` on Claude Code), or as plain text options with the same choices (custom option last) if it has none:
+- Otherwise infer from context where obvious (on a feature branch ahead of base → `pr`; just tagged a version → `release-note`), then **confirm or ask** with one question. Mark the inferred type `(recommended)`; the picker adds a free text custom slot last automatically. Present these as your agent's interactive option picker (`ask_user_question` (on pi)), or as plain text options with the same choices (custom option last) if it has none:
 
 ```
 "What should I write?"

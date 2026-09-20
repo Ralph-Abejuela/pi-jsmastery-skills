@@ -1,6 +1,6 @@
 ---
 name: audit
-allowed-tools: Bash, Read, Grep, Glob, Write, Edit, Agent, AskUserQuestion
+allowed-tools: pwsh, read, write, edit, agent, ask_user_question
 description: "Run /audit on a greenfield project, an existing codebase with missing docs, or one area (/audit src/auth) to bootstrap the project's AI context, the AGENTS.md files every later skill reads. Writes tool agnostic AGENTS.md plus thin CLAUDE.md pointers, adding only what is missing; never overwrites curated content."
 ---
 
@@ -48,7 +48,7 @@ The `AGENTS.md` files hold the content: create root if missing (Phase 1, 2) and 
 
 ## Execution
 
-The main thread does the writing in every phase; it never hands `AGENTS.md` writing to a subagent. The only subagent is a read only `scout` (cheapest model, Claude Code: `haiku`, never the session model), spawned only for a large scan; it returns a compact map the main thread writes from. A small scaffold or single area needs no scout; read it directly. Right before writing, read `agent-prompt.md` (persona, per phase instructions, templates) plus, in Phase 1, the selected pattern preset; then write following it. Read `agent-prompt.md` only at write time, not during `pre-flight`.
+The main thread does the writing in every phase; it never hands `AGENTS.md` writing to a subagent. The only subagent is a read only `scout` (cheapest model, pi: `haiku`, never the session model), spawned only for a large scan; it returns a compact map the main thread writes from. A small scaffold or single area needs no scout; read it directly. Right before writing, read `agent-prompt.md` (persona, per phase instructions, templates) plus, in Phase 1, the selected pattern preset; then write following it. Read `agent-prompt.md` only at write time, not during `pre-flight`.
 
 ### `Pre-flight` (main thread does this before anything else)
 
@@ -90,7 +90,7 @@ Do not read the other mode files. The greenfield and whole-repo modes additional
 
 ### Phase 0: Classify (only when `pre-flight` is ambiguous)
 
-Don't guess. Ask once via your agent's interactive option picker (`AskUserQuestion` on Claude Code), or plain text with the same options. Mark one option `(recommended)` by whichever signal is stronger (a scaffold like tree with a manifest but little history leans New; real feature code and deep history leans Existing), and the picker adds a free text custom slot last:
+Don't guess. Ask once via your agent's interactive option picker (`ask_user_question` (on pi)), or plain text with the same options. Mark one option `(recommended)` by whichever signal is stronger (a scaffold like tree with a manifest but little history leans New; real feature code and deep history leans Existing), and the picker adds a free text custom slot last:
 - question: "I can't tell if this is a new project or an existing codebase (<state why: e.g. 'a manifest exists but I see no source in a language I recognise', or 'files look like untouched scaffolding'>). Which is it?"
 - header: "Project state"
 - options: 1. `New project`, "I'll ask for your coding standards and seed the context." → Phase 1 (read the manifest/scaffold for the stack; still ask standards). 2. `Existing codebase`, "I'll scan what's here and document it." → Phase 2.

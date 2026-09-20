@@ -1,6 +1,6 @@
 ---
 name: test
-allowed-tools: Bash, Read, Grep, Glob, Write, Edit, Agent, AskUserQuestion
+allowed-tools: pwsh, read, write, edit, agent, ask_user_question
 description: "Run /test to write a test suite for code you just built or changed, after implementing a feature, route, or fix. Targets uncommitted changes automatically, reads test preferences.json for your framework (asks and saves it if absent), and picks the right strategy per file: happy path, edge cases, error states, accessibility."
 ---
 
@@ -39,7 +39,7 @@ Any Agent Skills client on macOS, Linux, or Windows:
 - Bundled files: referenced relative to this skill's folder. The main thread resolves the folder to an absolute path and reads the bundled files itself at write time (Step 8): `agent-prompt.md` and `writing-guide.md`.
 - No interactive question support? Ask any multiple choice question as plain text with the same options.
 
-In the Ask blocks below, each option is `"label": "description"`; render them through your agent's picker (`AskUserQuestion` on Claude Code) or as plain text.
+In the Ask blocks below, each option is `"label": "description"`; render them through your agent's picker (`ask_user_question` (on pi)) or as plain text.
 
 ## Execution
 
@@ -170,7 +170,7 @@ Set `RUN_AFTER = yes | no` and apply it at write time.
 
 #### 8. Write the suite (main thread)
 
-The main thread writes the tests itself. Do not spawn a writer. Resolve this skill's folder to an absolute path and Read `agent-prompt.md` and `writing-guide.md` now (only now, at write time): `agent-prompt.md` is your operating template, `writing-guide.md` is the strategy, tool rules, iteration loop, and report format you follow. Reading the changed files under test is the one expensive part; for a large or unfamiliar set, offload just the reading to a read only `scout` subagent on the cheapest model (Claude Code: `haiku`, not inheriting the session model) that returns a compact map, then write from it.
+The main thread writes the tests itself. Do not spawn a writer. Resolve this skill's folder to an absolute path and Read `agent-prompt.md` and `writing-guide.md` now (only now, at write time): `agent-prompt.md` is your operating template, `writing-guide.md` is the strategy, tool rules, iteration loop, and report format you follow. Reading the changed files under test is the one expensive part; for a large or unfamiliar set, offload just the reading to a read only `scout` subagent on the cheapest model (pi: `haiku`, not inheriting the session model) that returns a compact map, then write from it.
 
 The inputs to apply (the labeled values you gathered):
 1. unit tool, E2E tool, additional tools, `INSTALL` state; `testDir`, `filePattern`, package manager, stack/framework, `packageRoot`; the classified scope (each file path with its class: logic / component / page flow / api server / cli); `RUN_COMMAND`, `RUN_AFTER`; project context plus the build approach line; the 3 recent spec paths or `none` (read only if relevant to what you're testing); the design.md path or `none`; `TRACE_TO_CONTRACT`, the governing spec path, and the `verify.md` path (each `none` if absent).
@@ -184,7 +184,7 @@ Monorepo (multiple package roots from Step 1b): write each root's suite in turn,
 
 If the write failed or produced no report: say so and do it again; never report a passing or failing suite you didn't actually produce. Otherwise relay the format matching `RUN_AFTER`.
 
-Update the scope: if this feature is on the scope (`docs/scope/`) and the suite passes, tick its `Test it` box, then **offer `done`, don't gate it**: "Tests are in and passing, mark it `done`?" On the engineer's go, set the status `done` (At a glance table and heading) and mirror the spec `**Status**:` → `Accepted`. An `Assumed` spec does not block `done`; flag it ("owes ratification, `/architect` when you can") and let them decide. If tests fail or coverage is partial, leave `Test it` unticked and report. **Confirm the update as a closing gate** (don't skip it): report exactly what you ticked in each file, e.g. "Scope: ticked `Test it`, status → `done`. Spec: status → `Accepted`." No matching scope row → say so, don't finish silently. On `done`, advise `/clear` before the next feature: the scope and spec hold everything, a fresh session keeps the next build cheap. **Git:** if the nearest `AGENTS.md` `## Git` says `integration: on` and `commit` is not `manual`, offer to commit the suite with a one line subject (`test(<scope>): …`) plus the `Co-Authored-By` trailer; never push. (Effective tier = the feature's own tier tag if set, else the project `**Workflow:**` default. `/test` is the closer at `Beta`/`GA`; `Prototype` closes at `/develop`, `Alpha` at `/check verify`, so on those tiers this feature is already `done` or does not use `/test`. Honor an override tag; never default to a fixed chain.)
+Update the scope: if this feature is on the scope (`docs/scope/`) and the suite passes, tick its `Test it` box, then **offer `done`, don't gate it**: "Tests are in and passing, mark it `done`?" On the engineer's go, set the status `done` (At a glance table and heading) and mirror the spec `**Status**:` → `Accepted`. An `Assumed` spec does not block `done`; flag it ("owes ratification, `/architect` when you can") and let them decide. If tests fail or coverage is partial, leave `Test it` unticked and report. **Confirm the update as a closing gate** (don't skip it): report exactly what you ticked in each file, e.g. "Scope: ticked `Test it`, status → `done`. Spec: status → `Accepted`." No matching scope row → say so, don't finish silently. On `done`, advise `/new` before the next feature: the scope and spec hold everything, a fresh session keeps the next build cheap. **Git:** if the nearest `AGENTS.md` `## Git` says `integration: on` and `commit` is not `manual`, offer to commit the suite with a one line subject (`test(<scope>): …`); never push. (Effective tier = the feature's own tier tag if set, else the project `**Workflow:**` default. `/test` is the closer at `Beta`/`GA`; `Prototype` closes at `/develop`, `Alpha` at `/check verify`, so on those tiers this feature is already `done` or does not use `/test`. Honor an override tag; never default to a fixed chain.)
 
 Lead with the result; the per file list and AC traceability are in the test files (per `docs/conventions.md`). Template:
 

@@ -4,13 +4,13 @@
 
 This is case 4 from the guide: nothing was provided, so you establish the design system, then build to the bar. Design first, integrate second.
 
-**Prefer a proven design skill when one is available** (Anthropic's `frontend-design` on Claude Code, Codex's frontend skill, or a design MCP): it sets the visual direction with the same craft that makes the chat app's output good. With none available, derive the system from B2. Either way the token values land in the project's styling/theme system and the art direction lands in `design.md`.
+**Prefer a proven design skill when one is available** (Anthropic's `frontend-design` on pi, Codex's frontend skill, or a design MCP): it sets the visual direction with the same craft that makes the chat app's output good. With none available, derive the system from B2. Either way the token values land in the project's styling/theme system and the art direction lands in `design.md`.
 
 There are no bundled brand templates. You do not copy a design system, you derive one and prove it holds up.
 
 ### B1: Find the direction (a reference if one exists, else a mood)
 
-Ask for a reference first; a real one beats anything you invent, and engineers often have one in mind without offering it. Use the agent's picker (`AskUserQuestion` on Claude Code), else plain text with the same options (the picker adds its own free text option; add one yourself in the fallback).
+Ask for a reference first; a real one beats anything you invent, and engineers often have one in mind without offering it. Use the agent's picker (`ask_user_question` (on pi)), else plain text with the same options (the picker adds its own free text option; add one yourself in the fallback).
 
 ```
 "Anything to steer the design?"   (header: "Direction")

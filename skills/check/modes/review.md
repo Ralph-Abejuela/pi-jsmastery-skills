@@ -41,7 +41,7 @@ Do not rely on self-introspection or the "You are powered by…" system prompt l
 
 **1a: Detect the author model (best effort).** The author model is whatever is generating code in this session. Using your file tools, read `ANTHROPIC_MODEL` from the env if set, and check `.claude/settings.local.json`, `.claude/settings.json`, and the user-level `.claude/settings.json` in the home directory for a `"model"` value. Map ids to families: `claude-opus-*` → `opus`, `claude-sonnet-*` → `sonnet`, `claude-haiku-*` → `haiku`, `claude-fable-*` → `fable`. Use the system-prompt value only as a last-resort weak hint, possibly stale.
 
-**1b: Confirm the author model (one question).** A wrong guess silently reviews code with the same model and defeats the skill, so confirm before spawning. Pre-select the detected family as the recommended option. Present via your agent's interactive option picker (`AskUserQuestion` on Claude Code), or as plain-text options with the same choices if it has none:
+**1b: Confirm the author model (one question).** A wrong guess silently reviews code with the same model and defeats the skill, so confirm before spawning. Pre-select the detected family as the recommended option. Present via your agent's interactive option picker (`ask_user_question` (on pi)), or as plain-text options with the same choices if it has none:
 
 ```
 "Which model wrote this code? I'll review on a different one."
@@ -106,7 +106,7 @@ Resolve this skill's folder to an absolute path (you, the main agent, already re
 
 - `model`: the reviewer model chosen in Step 1 (different family from the author)
 - `description`: `"Review: <N> changed files on <reviewer-model>"`
-- Tools: `Read`, `Bash`, `Grep`, `Glob`, `Write`, no `Edit` (the reviewer reports, it does not change code)
+- Tools: `read`, `pwsh` (`rg`/`fd` for search), `write`, no `edit` (the reviewer reports, it does not change code)
 - `prompt`: the absolute path to `review-agent-prompt.md` (Read it first, then follow it), plus `Placeholder values:`, a labeled list supplying:
   1. `REVIEW_GUIDE`: the absolute path to `review-guide.md` (the subagent reads it as its rubric)
   2. Diff scope: `MODE`, `BASE`, `MERGE_BASE`, and the changed-file list with the exact `git diff` command to run

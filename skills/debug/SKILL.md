@@ -1,6 +1,6 @@
 ---
 name: debug
-allowed-tools: Bash, Read, Grep, Glob, Write, Edit, Agent
+allowed-tools: pwsh, read, write, edit, agent
 description: "Run /debug to find and fix a bug's root cause: a test failing for an unclear reason, /check verify finding a failure, or behavior being wrong. Runs a reproduce, localize, hypothesize, test, fix, verify loop, makes the minimal fix, and hands a regression test to /test. No features, no extra refactors."
 ---
 
@@ -75,14 +75,14 @@ Make the **minimal, targeted** change that addresses the proven cause. Don't fix
 - Run the Step 1 reproduction again, confirm it now passes.
 - Run the surrounding test suite, confirm no regression.
 - **Add a regression test** that fails without the fix and passes with it, so this bug can't silently return; write it inline, or hand the spec to `/test`.
-- **Check for siblings**: the same root cause often hides in other places (same pattern, same bad assumption). Grep for them and note or fix them.
+- **Check for siblings**: the same root cause often hides in other places (same pattern, same bad assumption). `rg` for them and note or fix them.
 
 ### Optional: run it in a subagent
 
 For a hunt that is not trivial, spawn an investigation subagent so the iterative tool use doesn't fill the main context:
-- `model`: set explicitly to a strong model, do not inherit the session model (Claude Code: `sonnet`)
+- `model`: set explicitly to a strong model, do not inherit the session model (pi: `sonnet`)
 - `description: "Debug: <symptom>"`
-- Tools: `Read`, `Bash`, `Grep`, `Glob`, `Edit`, `Write`
+- Tools: `read`, `pwsh` (`rg`/`fd` for search), `edit`, `write`
 - `prompt`: this loop + the captured symptom + reproduction + the relevant `AGENTS.md` (inlined). Require it to report the root cause with evidence, not just "fixed it."
 
 ### Report

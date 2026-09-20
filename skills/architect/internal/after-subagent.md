@@ -22,7 +22,7 @@ If a required section is missing or a field is blank/placeholder, add this line 
 - **`Alpha` tier** → recommend `Another model` for a foundational or risky spec, else offer without a strong push.
 - **`Prototype` tier, or no scope row** → recommend `Skip` (or `Same model` for a foundational spec).
 
-Present the panel (capability first: `AskUserQuestion` on Claude Code, else the same options as plain text; exactly one option marked recommended per the tier rule above, the picker adds the custom slot):
+Present the panel (capability first: `ask_user_question` (on pi), else the same options as plain text; exactly one option marked recommended per the tier rule above, the picker adds the custom slot):
 - **question**: "Cross check this spec before you review it? (Recommended: `<tier-based pick>`.)"
 - **header**: "Cross check"
 - **options**:
@@ -50,7 +50,7 @@ Act on the pick:
    Cross-check: <one-line verdict + any issue raised · or "you're reviewing it yourself" · or "skipped">
    ```
 
-   Then present the confirmation decision panel (capability first: `AskUserQuestion` on Claude Code, else the same options as plain text):
+   Then present the confirmation decision panel (capability first: `ask_user_question` (on pi), else the same options as plain text):
    - **question**: "Accept this spec, or change it?"
    - **header**: "spec"
    - **options**: `Accept, looks solid (recommended)` · `Change something, I'll tell you what` · `Rethink the approach`
@@ -80,7 +80,7 @@ Act on the pick:
    Done. Here is the quick version.
    What we decided: <one plain sentence>.
    Why: <one plain sentence>.
-   What is next: run /clear to start a fresh session (it reads this spec from disk, so nothing is lost and the long design chat you just had stops costing tokens), then /develop <feature> to build it.
+   What is next: run /new to start a fresh session (it reads this spec from disk, so nothing is lost and the long design chat you just had stops costing tokens), then /develop <feature> to build it.
    ```
 
    Keep it plain; gloss any jargon in parentheses. This is the human read, separate from the spec file's own `## Summary`.

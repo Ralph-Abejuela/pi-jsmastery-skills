@@ -32,7 +32,7 @@ Any Agent Skills client on macOS, Linux, or Windows. Run/launch snippets are ref
 ### Step 0a: Refactor mode: before/after diff (spawn a subagent)
 
 Only in refactor mode. It drives the app twice and holds two output sets, so run it in a subagent to keep the main context clean:
-- `model`: set explicitly to a strong model, do not inherit the session model (Claude Code: `sonnet`) · `description: "Verify: before/after diff, <scope>"` · Tools: `Read`, `Bash`, `Grep`, `Glob` (+ browser/HTTP driving)
+- `model`: set explicitly to a strong model, do not inherit the session model (pi: `sonnet`) · `description: "Verify: before/after diff, <scope>"` · Tools: `Read`, `Bash`, `Grep`, `Glob` (+ browser/HTTP driving)
 - Its job:
   1. Identify the affected surfaces from the diff (endpoints, queries, jobs, pages). Pick representative ones per changed area, favoring output that is most observable and most likely to reveal a behavior shift.
   2. Capture BEFORE (the state before the change). Prefer a throwaway git worktree at the ref before the change (the base branch, or the commit before the refactor): `git worktree add <tmp> <ref>`, start the app in that worktree, hit each surface, save the raw outputs, `git worktree remove <tmp>`. Only if worktrees aren't available, fall back to `git stash --include-untracked` (plain `git stash` leaves new files behind and contaminates the "before"), restore with `git stash pop` after.
@@ -141,7 +141,7 @@ Update the scope: if this feature is on the scope (`docs/scope/`) and the verdic
 
 - **On PASS, offer `done`, don't gate it.** If `Verify it` is the feature's last box (`Alpha` tier), suggest marking it `done`: "Verified and passing, mark it `done`, or keep going, your call." On the engineer's go, set `done` and mirror the spec's `**Status**:` line `In Progress` → `Accepted` (surgically; not `In Progress` → flag). If there are later boxes (`Test it` at `Beta`/`GA`), suggest `/test <feature>` as the next step, but the engineer may mark `done` and skip it. An `Assumed` spec does not block `done`; flag it ("owes ratification, `/architect` when you can") and let them decide.
 
-On FAIL or BLOCKED, tick nothing and report the gaps. Advise `/clear` before moving to a new feature (the spec and `verify.md` hold the state, so a fresh session loses nothing and stays cheap).
+On FAIL or BLOCKED, tick nothing and report the gaps. Advise `/new` before moving to a new feature (the spec and `verify.md` hold the state, so a fresh session loses nothing and stays cheap).
 
 **Confirm the update as a closing gate** (don't skip it): state in the report exactly what you ticked in each file, e.g. "Scope: ticked `Verify it`. Spec: status → `Accepted`." No matching scope row → say so ("no scope row matched `<feature>`"), don't finish silently.
 

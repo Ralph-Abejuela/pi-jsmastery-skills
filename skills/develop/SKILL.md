@@ -1,6 +1,6 @@
 ---
 name: develop
-allowed-tools: Bash, Read, Grep, Glob, Write, Edit, Agent, AskUserQuestion
+allowed-tools: pwsh, read, write, edit, agent, ask_user_question
 description: "Run /develop to build a feature, UI or backend, from an approved design, a page, component, API, service, or data slice. If something load bearing is undecided and no spec records it, it stops and routes you to /architect; otherwise it reads the spec plus AGENTS.md, builds, and advances the scope."
 ---
 
@@ -80,7 +80,7 @@ Read only what this feature needs, never the whole `docs/` tree: its one scope f
 2. **Open the governing spec via the feature's `spec` pointer**, reading only its build spec sections as defined in the build flow (`flow/build.md`), Step 2 item 1. Found → it's the spec; proceed. No pointer and no linked spec → targeted look in `docs/specs/<workspace>/` for one matching this feature's scope, never a blanket read.
 3. The **nearest** `AGENTS.md` (workspace/area) may already capture the decision, synced from an earlier feature (e.g. "the auth provider is already chosen") → proceed without a new spec.
 
-Decision owed and unrecorded → don't guess, don't silently stop. Ask (single select; `AskUserQuestion` on Claude Code):
+Decision owed and unrecorded → don't guess, don't silently stop. Ask (single select; `ask_user_question` (on pi)):
 
 - **question**: "This looks like it needs an architecture decision first: `<name the specific load-bearing choice, e.g. 'which auth provider + session model'>`. How do you want to handle it?"
 - **header**: "spec first?"
@@ -117,7 +117,7 @@ This decision was recorded by /develop, not deliberated. Run `/architect <featur
 to deliberate and ratify it. Until then it stays flagged as an owed decision; it does not block marking the feature `done`.
 ```
 
-Point the feature's scope `spec` line at this file. The assumption is now durable: it survives `/clear`, teammates read it, and a later `/develop` builds against it instead of guessing again. The `Assumed` spec stays flagged as owing ratification; it does not block marking the feature `done` (see `flow/build.md`, Step 4).
+Point the feature's scope `spec` line at this file. The assumption is now durable: it survives `/new`, teammates read it, and a later `/develop` builds against it instead of guessing again. The `Assumed` spec stays flagged as owing ratification; it does not block marking the feature `done` (see `flow/build.md`, Step 4).
 
 On `Architect it first`, end with:
 

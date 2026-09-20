@@ -140,9 +140,9 @@ Lead with what the pass produced and the first step; the approach, tier, and ful
 ## /scope <plan | replan | add> Â· <product, one line>
 
 **<N> features planned (<M> already on the scope, <K> deferred), build approach <name>, workflow <tier>.**
-Next: /clear, then <the first unticked box, usually `/architect <first feature>`, or `/audit` if a brownfield repo has no root AGENTS.md>
+Next: /new, then <the first unticked box, usually `/architect <first feature>`, or `/audit` if a brownfield repo has no root AGENTS.md>
 Heads up: <a feature bumped to a higher tier, a `needs a decision` foundation, or a genuine risk>   (omit if none)
 Scope written to <docs/scope/scope.md>.
 ```
 
-_Context hygiene: the scope, the specs, and `AGENTS.md` are the durable state, so the workflow hands off through files, not the chat. Advise `/clear` between units (after `/scope`, after each `/architect`, between features) and `/compact` mid unit if one run gets long. On Claude Code use `/clear` / `/compact`; use your agent's fresh session equivalent elsewhere._
+_Context hygiene: the scope, the specs, and `AGENTS.md` are the durable state, so the workflow hands off through files, not the chat. Advise `/new` between units (after `/scope`, after each `/architect`, between features) and `/compact` mid unit if one run gets long. on pi use `/new` / `/compact`; use your agent's fresh session equivalent elsewhere._
