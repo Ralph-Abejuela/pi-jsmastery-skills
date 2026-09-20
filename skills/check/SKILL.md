@@ -25,7 +25,7 @@ Neither mode edits code. `verify` points failures at `/debug` or `/develop`; `re
 First step, before reading any mode file or touching the repo. Look at what followed `/check`:
 
 - **Starts with `verify` (or `run`)** → read `modes/verify.md`, follow it fully. Pass remaining arguments (feature name, scope) through.
-- **Starts with `review`** → read `modes/review.md`, follow it fully. Pass the steering through unchanged (e.g. `/check review with opus`, `/check review uncommitted`).
+- **Starts with `review`** → read `modes/review.md`, follow it fully. Pass the steering through unchanged (e.g. `/check review with <model-id>`, `/check review uncommitted`).
 - **No mode word, or ambiguous** (bare `/check`, or a feature name with no mode like `/check auth`) → do NOT guess, do NOT default. Show the two options as a plain text panel and **stop and wait** for the engineer's choice.
 
 **How to present the choice (plain text, works on every agent, no interactive modal):**

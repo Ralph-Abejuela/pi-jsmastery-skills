@@ -6,7 +6,7 @@ The `review` mode of `/check`: a senior code review, before merge, on a differen
 
 Your role: the senior reviewer with fresh eyes, the one who didn't write the code. Read the diff for what it actually does, not what it was meant to do; rank findings by the harm they'd cause in production. The one rule that never bends: the review runs on a different model than wrote the code, because a model reviewing its own output shares its blind spots. Write severity ranked findings.
 
-- Different Claude model, automatically: the review runs in a subagent on the contrasting Claude model. No API keys, no external setup.
+- Different model, automatically: the review runs in a subagent on a contrasting model picked from pi's scoped models. No API keys, no external setup.
 - Read only on code: produces findings, never edits the code under review.
 - Want a different provider? For the most independent review, switch your active model (`/model`, or your other AI tool) and run the review there; a recommendation, not machinery. The skill never sends your code anywhere itself.
 
@@ -16,7 +16,7 @@ Owns review findings (`docs/reviews/`). Does not write code, tests, specs, or th
 
 Acts, with one deliberate exception: it confirms which model wrote the code before reviewing (a single MCQ, with the detected value selected by default), because the model can't reliably detect itself and a wrong guess silently breaks the cross model guarantee (see Step 1). Everything else (scoping, reviewing, writing findings) it does without asking. It states which model is reviewing so you can still redirect, and pauses if there is nothing to review (clean tree, no branch diff). The confirm is skipped when you pass an explicit `with <model>` override and detection was unambiguous.
 
-Steering: `/check review` (default contrasting model), `/check review with opus` (force a reviewer), or `/check review uncommitted` (scope to working tree changes only).
+Steering: `/check review` (default contrasting model), `/check review with <model-id>` (force a reviewer, e.g. `with openai/gpt-4o`), or `/check review uncommitted` (scope to working tree changes only).
 
 ## Artifact ownership
 
@@ -39,41 +39,36 @@ Any Agent Skills client on macOS, Linux, or Windows:
 
 Do not rely on self-introspection or the "You are powered by…" system prompt line (written at session start, stale the moment the user switches with `/model`): the model cannot reliably name itself. Detect from durable config, then confirm.
 
-**1a: Detect the author model (best effort).** The author model is whatever is generating code in this session. Using your file tools, read `ANTHROPIC_MODEL` from the env if set, and check `.claude/settings.local.json`, `.claude/settings.json`, and the user-level `.claude/settings.json` in the home directory for a `"model"` value. Map ids to families: `claude-opus-*` → `opus`, `claude-sonnet-*` → `sonnet`, `claude-haiku-*` → `haiku`, `claude-fable-*` → `fable`. Use the system-prompt value only as a last-resort weak hint, possibly stale.
+**1a: Detect the author model (best effort).** The author model is whatever is generating code in this session. On pi, read pi's resolved model config, never a provider-specific file: `defaultProvider` / `defaultModel` in the project `.pi/settings.json` or the global `~/.pi/agent/settings.json` (saved when the user presses Ctrl+S in `/model`); a model id is `provider/modelId` (e.g. `anthropic/claude-sonnet-4-5`) or a bare id. On other agents, read their equivalent config. Use the system-prompt value only as a last-resort weak hint, possibly stale.
 
-**1b: Confirm the author model (one question).** A wrong guess silently reviews code with the same model and defeats the skill, so confirm before spawning. Pre-select the detected family as the recommended option. Present via your agent's interactive option picker (`ask_user_question` (on pi)), or as plain-text options with the same choices if it has none:
+**1b: Confirm the author model (one question).** A wrong guess silently reviews code with the same model and defeats the skill, so confirm before spawning. Pre-select the detected model as the recommended option. Present via your agent's interactive option picker (`ask_user_question` (on pi)), or as plain-text options with the same choices if it has none:
 
 ```
 "Which model wrote this code? I'll review on a different one."
   header: "Author model"
   options:
-    - label: "<detected> (detected, recommended)"   # e.g. "opus (detected, recommended)"
+    - label: "<detected model id> (detected, recommended)"   # e.g. "anthropic/claude-sonnet-4-5 (detected, recommended)"
       description: "I'll review with <contrasting model> for a fresh perspective"
-    - label: "<next strong model>"
+    - label: "<another strong model from pi's scoped set>"
       description: "Review will run on <its contrast>"
-    - label: "<another strong model>"
+    - label: "<one more strong model from pi's scoped set>"
       description: "Review will run on <its contrast>"
 ```
 
 Skip the question only when detection was unambiguous and the user passed an explicit `with <model>` reviewer override (the override settles which model reviews). Otherwise ask.
 
-**1c: Map to the contrasting Claude reviewer.** No API keys, no external setup; a subagent spawns a different-model reviewer and that model does the review:
+**1c: Pick the contrasting reviewer from pi's scoped models.** No API keys, no external setup; a subagent spawns a different-model reviewer and that model does the review.
 
-| Author model | Reviewer model to spawn |
-|---|---|
-| `opus` | `sonnet` |
-| `sonnet` | `opus` |
-| `fable` | `opus` |
-| `haiku` | `sonnet` |
+On pi, the reviewer comes from the models pi actually has — never a predefined name like `sonnet` or `haiku`, and never a hardcoded Anthropic family. Use the **scoped model set**: what `/scoped-models` shows and Ctrl+P cycles, configured by the `enabledModels` setting or the `--models` launch flag (empty = every available model is usable). If that set is empty, use the full available set from `pi --list-models` or the `/model` picker. These are real `provider/modelId` ids (e.g. `deepseek/deepseek-v4-flash`, `zai/glm-5.3-flash`, `openai/gpt-4o`), often from several providers.
 
 Rules:
-- The reviewer must never be the same family as the author, the one invariant this skill exists to guarantee.
-- Never review with `haiku`; review is high-value reasoning, use a strong model.
-- If no differing strong model is available (an org `availableModels`/`enforceAvailableModels` restriction, or a client whose subagents inherit the parent's model, e.g. Antigravity's `invoke_subagent`, which runs on the parent model), fall back to the strongest available model that differs from the author. If none differs, run the review inline on the author's model and say so plainly: a degraded review that shares the author's blind spots, not the cross-model guarantee. When independence matters, prefer switching your active model (below) over accepting the same-model review.
+- The reviewer must never be the same model as the author, the one invariant this skill exists to guarantee. Compare resolved ids, not aliases: a bare `/model` name resolves to a concrete `provider/modelId`, so confirm the resolved id before assuming two names differ.
+- Never review on the weakest scoped model; review is high-value reasoning, use a strong one from the set.
+- If the scoped set yields no differing strong model (a restricted `enabledModels`, a single configured model, or a client whose subagents inherit the parent's model, e.g. Antigravity's `invoke_subagent`, which runs on the parent model), fall back to the strongest available model that differs from the author. If none differs, run the review inline on the author's model and say so plainly: a degraded review that shares the author's blind spots, not the cross-model guarantee. When independence matters, prefer switching your active model (below) over accepting the same-model review.
 - If the user passed `with <model>`: honor it only if it differs from the author. If they named the author's own model, refuse and explain: "That's the model that wrote the code. Reviewing with it shares its blind spots. Using `<contrast>` instead."
 
-State the final choice plainly before spawning:
-> "Author on `opus`; running the review on `sonnet`, a second model catches what the author model is blind to."
+State the final choice plainly before spawning, with the resolved ids:
+> "Author on `anthropic/claude-sonnet-4-5`; running the review on `anthropic/claude-opus-4-5`, a second model catches what the author model is blind to."
 
 Want a different provider (GPT, Gemini)? Don't wire up API keys; switch your active model in your AI tool (`/model` for a different Claude, or open the change in your other assistant) and run the review there. The skill recommends this in its closing note for high-stakes changes; it never sends your code anywhere itself.
 
@@ -104,7 +99,7 @@ Pass to the subagent: project-context contents inline (read `AGENTS.md`, canonic
 
 Resolve this skill's folder to an absolute path (you, the main agent, already resolve these relative paths, so you know the folder) and pass the absolute paths of two bundled files in the spawn prompt: `review-agent-prompt.md` (the spawn template) and `review-guide.md` (the rubric). Do not read their contents into the main context; the subagent's first action is to `Read` `review-agent-prompt.md` by path and follow it. Pass the dynamic values as a labeled list in the spawn prompt (`Placeholder values: ...`). Fallback: if your client's subagents cannot read files, read both files and inline their contents into a filled prompt instead (the old behavior). Then spawn:
 
-- `model`: the reviewer model chosen in Step 1 (different family from the author)
+- `model`: the reviewer model chosen in Step 1 (different model from the author)
 - `description`: `"Review: <N> changed files on <reviewer-model>"`
 - Tools: `read`, `pwsh` (`rg`/`fd` for search), `write`, no `edit` (the reviewer reports, it does not change code)
 - `prompt`: the absolute path to `review-agent-prompt.md` (Read it first, then follow it), plus `Placeholder values:`, a labeled list supplying:
