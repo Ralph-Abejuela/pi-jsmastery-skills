@@ -12,6 +12,19 @@ Run `/debug` anytime something breaks. Run a bare `/scope` anytime to see where 
 
 > 📖 **Want the full picture?** Read the **[Workflow Guide](docs/workflow-guide.md)** — a plain-language walkthrough of every skill, the files that carry the work, who owns what, and one idea followed all the way from scope to shipped.
 
+## Why this repo exists
+
+This is a **pi-tailored port** of [jsmastery-pro/skills](https://github.com/jsmastery-pro/skills): the same idea → shipped workflow (`/scope` → `/audit` → `/architect` → `/develop` → `/check` → `/test` → `/document` → `/sync`, plus `/debug`), with every instruction rewritten to name the tools, commands, and behavior the [pi coding agent](https://github.com/earendil-dev/pi) actually has.
+
+What changed vs upstream:
+
+- **Tool names** — `pwsh`, `read`, `write`, `edit`, `agent`, `ask_user_question` instead of `Bash` / `Read` / `AskUserQuestion`; `rg` / `fd` for search.
+- **Subagents** — pi's `scout` and `researcher` types, with pi model hints (`pi: haiku`, `pi: sonnet`).
+- **Session commands** — `/new` instead of `/clear`.
+- **`/check review`** — detects the author model from pi's config (`defaultProvider` / `defaultModel` in `.pi/settings.json` or `~/.pi/agent/settings.json`) and picks the contrasting reviewer from **pi's scoped models** (`/scoped-models`, the `enabledModels` setting, or `pi --list-models`) instead of assuming predefined Anthropic model names.
+
+Nothing machine-specific ships in the skill files: no personal paths, no editor/extension details from any one setup — the marked difference is pi itself. Upstream is kept as the git `origin`; this port is maintained by porting upstream changes rather than rebasing.
+
 ## The skills
 
 | Skill | What it does |
@@ -30,17 +43,29 @@ Hardening (systems level failure mode analysis) is temporarily removed and will 
 
 ## Install
 
-Uses [npx skills](https://github.com/vercel-labs/skills). Pick your agent:
+**pi** reads skills from `~/.pi/agent/skills/` (Windows: `%USERPROFILE%\.pi\agent\skills\`) — this repo's `skills/` folder is exactly that layout, one folder per skill.
+
+### From npm
+
+Once published as [`pi-jsmastery-skills`](https://www.npmjs.com/package/pi-jsmastery-skills):
 
 ```bash
-# Claude Code (installs into .claude/skills, then restart Claude Code)
-npx skills@latest add jsmastery-pro/skills -a claude-code
-
-# Generic .agents/skills, read by Codex and other agents
-npx skills@latest add jsmastery-pro/skills
+npm install -g pi-jsmastery-skills
 ```
 
-Works on any Agent Skills client (Claude Code, Cursor, Codex, Gemini CLI, and [more](https://agentskills.io/clients)). Commit the installed skills folder to share the workflow with your team.
+The package's `postinstall` links every skill under `skills/` into `~/.pi/agent/skills/`, so pi picks them up next session — same pattern as the [bigpowers](https://www.npmjs.com/package/bigpowers) pi-skills package. Update with `npm update -g pi-jsmastery-skills`; uninstall with `npm uninstall -g pi-jsmastery-skills` (then remove the skill links from `~/.pi/agent/skills/`).
+
+### From this repo (any Agent Skills client)
+
+```bash
+# npx skills installer — installs into the skills folder your agent reads
+npx skills@latest add Ralph-Abejuela/pi-jsmastery-skills
+
+# or copy manually (one folder per skill)
+# cp -r skills/* ~/.pi/agent/skills/
+```
+
+Works on any Agent Skills client that reads a skills folder (Claude Code, Cursor, Codex, Gemini CLI, and [more](https://agentskills.io/clients)). Commit the installed skills folder to share the workflow with your team.
 
 Each skill's instructions live in its `SKILL.md`, which is what every client reads. The `agents/openai.yaml` beside it is interface metadata only (the name, blurb, and opening prompt Codex shows in its agent picker); it carries no logic of its own.
 

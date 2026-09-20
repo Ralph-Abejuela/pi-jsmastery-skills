@@ -41,8 +41,9 @@
 
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const SKILLS_DIR = new URL('../skills/', import.meta.url).pathname;
+const SKILLS_DIR = fileURLToPath(new URL('../skills/', import.meta.url));
 const violations = [];
 const warnings = []; // over WARN_AT but still under budget — visible, not fatal
 const sizes = []; // { rel, words, bytes } per .md file, for the word-count report

@@ -1,0 +1,30 @@
+# Trusted publishing (OIDC) — no tokens, no secrets. See README "Publishing to npm".
+# npm-side setup: package Settings → Trusted publishing → Add trusted publisher:
+#   Organization or user: Ralph-Abejuela · Repository: pi-jsmastery-skills
+#   Workflow filename: exactly "publish.yml" (case-sensitive)
+#   Allowed actions: npm publish
+
+name: publish
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+      - name: Check portability (zero-dependency, same as check.yml)
+        run: npm test
+      - name: Publish (trusted publishing, auto provenance)
+        run: npm publish
