@@ -37,40 +37,44 @@ Any Agent Skills client on macOS, Linux, or Windows:
 
 ### 1. Determine the author model, then pick a DIFFERENT reviewer
 
-Do not rely on self-introspection or the "You are powered by…" system prompt line (written at session start, stale the moment the user switches with `/model`): the model cannot reliably name itself. Detect from durable config, then confirm.
+Do not rely on self-introspection or the "You are powered by…" system prompt line (written at session start, stale the moment the user switches with `/model`): the model cannot reliably name itself. Detect from durable pi config, then confirm.
 
-**1a: Detect the author model (best effort).** The author model is whatever is generating code in this session. On pi, read pi's resolved model config, never a provider-specific file: `defaultProvider` / `defaultModel` in the project `.pi/settings.json` or the global `~/.pi/agent/settings.json` (saved when the user presses Ctrl+S in `/model`); a model id is `provider/modelId` (e.g. `anthropic/claude-sonnet-4-5`) or a bare id. On other agents, read their equivalent config. Use the system-prompt value only as a last-resort weak hint, possibly stale.
+**1a: Enumerate the models pi actually has — the only ids this skill may ever name.** Everything downstream (the detected author, every picker option, the reviewer) must be one of these ids. Gather them in this order:
+1. **Scoped set (authoritative when present):** `enabledModels` in the project `.pi/settings.json`, falling back to the global `~/.pi/agent/settings.json` — an array of `provider/modelId` patterns; this is exactly what `/scoped-models` shows and Ctrl+P cycles. A non-empty list is the set to use.
+2. **Full set (fallback when `enabledModels` is absent/empty):** the ids `pi --list-models` prints, or ask the engineer which models `/model` lists.
 
-**1b: Confirm the author model (one question).** A wrong guess silently reviews code with the same model and defeats the skill, so confirm before spawning. Pre-select the detected model as the recommended option. Present via your agent's interactive option picker (`ask_user_question` (on pi)), or as plain-text options with the same choices if it has none:
+Every model id you name in this flow must come out of that enumeration, verbatim: no family shorthand (`sonnet`, `opus`, `haiku`, `fable`), no model you weren't told about, nothing recalled from training. If the enumeration comes up empty, stop and ask the engineer to run `/model` and name the models (or switch to a reviewer manually); never proceed on guessed names.
+
+**1b: Detect the author model (best effort).** The author model is whatever is generating code in this session. On pi, read `defaultProvider` / `defaultModel` from the project `.pi/settings.json`, else the global `~/.pi/agent/settings.json` (saved when the engineer presses Ctrl+S in `/model`); a model id is `provider/modelId` or a bare id that resolves within the enumeration. If the config names a model that isn't in the enumeration, trust the enumeration and ask. On other agents, read their equivalent config. Use the system-prompt value only as a last-resort weak hint, possibly stale.
+
+**1c: Confirm the author model (one question).** A wrong guess silently reviews code with the same model and defeats the skill, so confirm before spawning. Pre-select the detected model as the recommended option. Present via your agent's interactive option picker (`ask_user_question` (on pi)), or as plain-text options with the same choices if it has none:
 
 ```
 "Which model wrote this code? I'll review on a different one."
   header: "Author model"
   options:
-    - label: "<detected model id> (detected, recommended)"   # e.g. "anthropic/claude-sonnet-4-5 (detected, recommended)"
-      description: "I'll review with <contrasting model> for a fresh perspective"
-    - label: "<another strong model from pi's scoped set>"
-      description: "Review will run on <its contrast>"
-    - label: "<one more strong model from pi's scoped set>"
-      description: "Review will run on <its contrast>"
+    - label: "<detected model id from 1a> (detected, recommended)"
+      description: "I'll review with <a reviewer candidate from 1a> for a fresh perspective"
+    - label: "<another model id from 1a>"
+      description: "Review will run on <its contrasting candidate>"
+    - label: "<one more model id from 1a>"
+      description: "Review will run on <its contrasting candidate>"
 ```
 
 Skip the question only when detection was unambiguous and the user passed an explicit `with <model>` reviewer override (the override settles which model reviews). Otherwise ask.
 
-**1c: Pick the contrasting reviewer from pi's scoped models.** No API keys, no external setup; a subagent spawns a different-model reviewer and that model does the review.
+**1d: Pick the contrasting reviewer — from the enumeration, never by name.** Reviewer candidates are the enumerated ids (1a) minus the author id. There is no mapping table and no family math: the candidates are the ids themselves, one of which is spawned.
 
-On pi, the reviewer comes from the models pi actually has — never a predefined name like `sonnet` or `haiku`, and never a hardcoded Anthropic family. Use the **scoped model set**: what `/scoped-models` shows and Ctrl+P cycles, configured by the `enabledModels` setting or the `--models` launch flag (empty = every available model is usable). If that set is empty, use the full available set from `pi --list-models` or the `/model` picker. These are real `provider/modelId` ids (e.g. `deepseek/deepseek-v4-flash`, `zai/glm-5.3-flash`, `openai/gpt-4o`), often from several providers.
+- Present the reviewer choice to the engineer as a picker built from the candidate ids and mark one `(recommended)`: prefer a candidate the enumeration itself signals as capable (a reasoning-capable id, or a non flash/lite/mini/fast id when the list shows that distinction); with no way to rank, recommend the first candidate after the author in the enumeration order. The engineer can pick any candidate.
+- Rules:
+  - The reviewer must never be the same model id as the author — the one invariant this skill exists to guarantee. Compare resolved ids, not aliases.
+  - Never review on a flash/lite/mini/fast tier id when a stronger candidate exists in the enumeration; review is high-value reasoning.
+  - No candidate differs (a one-model scoped set, or a client whose subagents inherit the parent's model, e.g. Antigravity's `invoke_subagent`, which runs on the parent model) → run the review inline on the author's model and say so plainly: a degraded review that shares the author's blind spots, not the cross-model guarantee. When independence matters, prefer switching your active model (below) over accepting the same-model review.
+  - If the user passed `with <model>`: honor it only if it differs from the author AND is in the enumeration (pi must be able to spawn it). If it names the author's own model, refuse and explain: "That's the model that wrote the code. Reviewing with it shares its blind spots. Using `<a candidate id>` instead."
+- State the final choice plainly before spawning, with the real ids from the enumeration:
+  > "Author on `<author id>`; running the review on `<reviewer id>`, a second model catches what the author model is blind to."
 
-Rules:
-- The reviewer must never be the same model as the author, the one invariant this skill exists to guarantee. Compare resolved ids, not aliases: a bare `/model` name resolves to a concrete `provider/modelId`, so confirm the resolved id before assuming two names differ.
-- Never review on the weakest scoped model; review is high-value reasoning, use a strong one from the set.
-- If the scoped set yields no differing strong model (a restricted `enabledModels`, a single configured model, or a client whose subagents inherit the parent's model, e.g. Antigravity's `invoke_subagent`, which runs on the parent model), fall back to the strongest available model that differs from the author. If none differs, run the review inline on the author's model and say so plainly: a degraded review that shares the author's blind spots, not the cross-model guarantee. When independence matters, prefer switching your active model (below) over accepting the same-model review.
-- If the user passed `with <model>`: honor it only if it differs from the author. If they named the author's own model, refuse and explain: "That's the model that wrote the code. Reviewing with it shares its blind spots. Using `<contrast>` instead."
-
-State the final choice plainly before spawning, with the resolved ids:
-> "Author on `anthropic/claude-sonnet-4-5`; running the review on `anthropic/claude-opus-4-5`, a second model catches what the author model is blind to."
-
-Want a different provider (GPT, Gemini)? Don't wire up API keys; switch your active model in your AI tool (`/model` for a different Claude, or open the change in your other assistant) and run the review there. The skill recommends this in its closing note for high-stakes changes; it never sends your code anywhere itself.
+Want a different provider (GPT, Gemini)? Don't wire up API keys; switch your active model in your AI tool (`/model` on pi, or open the change in your other assistant) and run the review there. The skill recommends this in its closing note for high-stakes changes; it never sends your code anywhere itself.
 
 ### 2. Scope the change set (cheap, names only, let the subagent read the diff)
 
@@ -95,7 +99,7 @@ Paths and cheap signals only; the subagent reads on demand. Using your file tool
 
 Pass to the subagent: project-context contents inline (read `AGENTS.md`, canonical, or `CLAUDE.md` as fallback; short), the 3 recent spec paths, the base ref / merge-base, and the diff scope. The subagent reads a governing spec's **build-spec sections only** (`index.md`: Requirements, Decision, the design section, Consequences), the contract to review against; not `rationale.md` (decision history), unless a specific finding hinges on the reasoning. It runs `git diff` itself and reads the changed files and their tests.
 
-### 4. Spawn the review subagent: on the contrasting Claude model
+### 4. Spawn the review subagent: on the contrasting reviewer
 
 Resolve this skill's folder to an absolute path (you, the main agent, already resolve these relative paths, so you know the folder) and pass the absolute paths of two bundled files in the spawn prompt: `review-agent-prompt.md` (the spawn template) and `review-guide.md` (the rubric). Do not read their contents into the main context; the subagent's first action is to `Read` `review-agent-prompt.md` by path and follow it. Pass the dynamic values as a labeled list in the spawn prompt (`Placeholder values: ...`). Fallback: if your client's subagents cannot read files, read both files and inline their contents into a filled prompt instead (the old behavior). Then spawn:
 
