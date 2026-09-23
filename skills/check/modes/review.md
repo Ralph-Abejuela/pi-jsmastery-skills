@@ -29,7 +29,7 @@ Artifact base: findings live under `docs/` by default. If `docs/` is a published
 ## Portability (any OS, any agent)
 
 Any Agent Skills client on macOS, Linux, or Windows:
-- Commands: `git` is the only required CLI and behaves the same on every OS; run the `git` lines as shown. Other shell snippets are POSIX reference, not literal scripts: don't assume `find`, `grep`, `sed`, `cat`, `test`/`[ ]`, `ls`, `xargs`, or `for` exist. Use your agent's file tools that work on every OS (read, search/glob, write) for those, and apply branching logic yourself rather than via shell `if`/variables/redirects.
+- Commands: `git` is the only required CLI and behaves the same on every OS; run the `git` lines as shown. Other shell snippets are POSIX reference, not literal scripts: don't assume `find`, `grep`, `sed`, `cat`, `test`/`[ ]`, `ls`, `xargs`, or `for` exist. Use your agent's file tools that work on every OS (read, grep, find, write) for those, and apply branching logic yourself rather than via shell `if`/variables/redirects.
 - Bundled files: referenced by paths relative to this skill's folder. The main agent resolves the folder to an absolute path (it already resolves these relative paths, so it knows the folder) and passes absolute file paths in the subagent prompt; it must not read the bundled files' contents into the main context; the subagent reads them by path. Fallback: if your client's subagents cannot read files, read and inline the contents instead.
 - No subagent support? The benefit of a second model then needs you to switch your active model (or open the diff in another assistant) and run the review there; otherwise run it inline, noting the reviewer shares the author model's blind spots.
 
@@ -47,7 +47,7 @@ Every model id you name in this flow must come out of that enumeration, verbatim
 
 **1b: Detect the author model (best effort).** The author model is whatever is generating code in this session. On pi, read `defaultProvider` / `defaultModel` from the project `.pi/settings.json`, else the global `~/.pi/agent/settings.json` (saved when the engineer presses Ctrl+S in `/model`); a model id is `provider/modelId` or a bare id that resolves within the enumeration. If the config names a model that isn't in the enumeration, trust the enumeration and ask. On other agents, read their equivalent config. Use the system prompt value only as a weak hint of last resort, possibly stale.
 
-**1c: Confirm the author model (one question).** A wrong guess silently reviews code with the same model and defeats the skill, so confirm before spawning. Preselect the detected model as the recommended option. Present via your agent's interactive option picker (`ask_user_question` (on pi)), or as plain text options with the same choices if it has none:
+**1c: Confirm the author model (one question).** A wrong guess silently reviews code with the same model and defeats the skill, so confirm before spawning. Preselect the detected model as the recommended option. Present via your agent's interactive option picker, or as plain text options with the same choices if it has none:
 
 ```
 "Which model wrote this code? I'll review on a different one."
@@ -105,7 +105,7 @@ Resolve this skill's folder to an absolute path (you, the main agent, already re
 
 - `model`: the reviewer model chosen in Step 1 (different model from the author)
 - `description`: `"Review: <N> changed files on <reviewer-model>"`
-- Tools: `read`, `pwsh` (`rg`/`fd` for search), `write`, no `edit` (the reviewer reports, it does not change code)
+- Tools: `read`, `grep`, `find`, `bash`, `write`, no `edit` (the reviewer reports, it does not change code)
 - `prompt`: the absolute path to `review-agent-prompt.md` (Read it first, then follow it), plus `Placeholder values:`, a labeled list supplying:
   1. `REVIEW_GUIDE`: the absolute path to `review-guide.md` (the subagent reads it as its rubric)
   2. Diff scope: `MODE`, `BASE`, `MERGE_BASE`, and the changed file list with the exact `git diff` command to run

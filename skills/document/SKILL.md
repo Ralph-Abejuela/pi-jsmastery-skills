@@ -1,6 +1,6 @@
 ---
 name: document
-allowed-tools: pwsh, read, write, edit, agent, ask_user_question
+allowed-tools: read, write, edit, bash, grep, find
 description: "Run /document `pr` | `changelog` | `release-note` | `postmortem` (or let it ask) to write the human facing prose about a change. Drafts from the real commits and diff, writing to the right place. Does not write code, tests, or specs."
 ---
 
@@ -14,7 +14,7 @@ Write everything this skill produces, files and messages alike, in plain simple 
 
 **Your role:** the technical writer who writes from the record, not from imagination, and for the reader, not the author. Every sentence traces to something that actually happened (a commit, a diff, an incident fact you were given), and every document is pitched at whoever has to act on it (audience column below). You never invent a timeline entry, a cause, or a change that isn't in the source.
 
-Generates one of four document types from the real change history. The main thread writes the document itself; the only thing it may offload is reading, and only for a very large diff, to a read only `scout` subagent on the cheapest model (pi: `haiku`):
+Generates one of four document types from the real change history. The main thread writes the document itself; the only thing it may offload is reading, and only for a very large diff, to a read only subagent on the cheapest model:
 
 | Type | Source | Audience | Output |
 |---|---|---|---|
@@ -34,7 +34,7 @@ PR text, `CHANGELOG.md`, `docs/releases/`, `docs/postmortems/` (owned by this sk
 ## Portability (any OS, any agent)
 
 Written for any Agent Skills client on macOS, Linux, or Windows:
-- **Commands**: `git` (and optionally `gh`) are the only CLIs, and behave the same on every OS, run the `git` lines as shown. Other shell snippets are POSIX **reference**, not literal scripts: don't assume `find`, `grep`, `sed`, `cat`, `test`/`[ ]`, `command -v`, or `node -e` exist. Use your agent's own cross platform file tools (read, search/glob, write) for those, and apply branching logic yourself rather than via shell `if`/variables/redirects.
+- **Commands**: `git` (and optionally `gh`) are the only CLIs, and behave the same on every OS, run the `git` lines as shown. Other shell snippets are POSIX **reference**, not literal scripts: don't assume `find`, `grep`, `sed`, `cat`, `test`/`[ ]`, `command -v`, or `node -e` exist. Use your agent's own cross platform file tools (read, grep, find, write) for those, and apply branching logic yourself rather than via shell `if`/variables/redirects.
 - **Bundled files**: referenced by paths relative to this skill's folder. The main thread resolves this skill's folder to an **absolute path** (it already resolves these relative paths, so it knows the folder) and reads them itself at write time (Step 3): `agent-prompt.md` and the one template for the chosen type.
 - **No interactive question support?** The doc type pick uses an interactive picker where the agent has one; without it, ask the doc type question as plain text with the same options.
 
@@ -43,7 +43,7 @@ Written for any Agent Skills client on macOS, Linux, or Windows:
 ### 1. Determine the document type
 
 - If passed as an argument (`pr`, `changelog`, `release-note`, `postmortem`): use it.
-- Otherwise infer from context where obvious (on a feature branch ahead of base → `pr`; just tagged a version → `release-note`), then **confirm or ask** with one question. Mark the inferred type `(recommended)`; the picker adds a free text custom slot last automatically. Present these as your agent's interactive option picker (`ask_user_question` (on pi)), or as plain text options with the same choices (custom option last) if it has none:
+- Otherwise infer from context where obvious (on a feature branch ahead of base → `pr`; just tagged a version → `release-note`), then **confirm or ask** with one question. Mark the inferred type `(recommended)`; the picker adds a free text custom slot last automatically. Present these as your agent's interactive option picker, or as plain text options with the same choices (custom option last) if it has none:
 
 ```
 "What should I write?"
@@ -57,7 +57,7 @@ Written for any Agent Skills client on macOS, Linux, or Windows:
 
 ### 2. Gather the source material
 
-Collect the lightweight history below, then read the diff and files yourself at write time (a `scout` subagent may do the reading for a very large diff).
+Collect the lightweight history below, then read the diff and files yourself at write time (a read only subagent may do the reading for a very large diff).
 
 Run these `git`/`gh` commands as shown; do the steps that are not commands with your agent's own file tools and your own branching logic.
 
@@ -92,7 +92,7 @@ Resolve this skill's folder to an absolute path (you already resolve these relat
 
 The inputs to apply:
   1. Document type + its template (the chosen one only; read it)
-  2. Source: commit list, diff command, and (postmortem) the incident facts. Read the diff yourself; for a very large diff (e.g. >25 files), offload the reading to a `scout` subagent (haiku) that returns a compact summary by file group/feature, and write from that
+  2. Source: commit list, diff command, and (postmortem) the incident facts. Read the diff yourself; for a very large diff (e.g. >25 files), offload the reading to a read only subagent (the cheapest model) that returns a compact summary by file group/feature, and write from that
   3. Project context contents (project name, conventions), read `AGENTS.md`, or `CLAUDE.md` fallback, + recent spec paths for the "why"
   4. Output target for the type and today's date
   5. **pr**: the gh action, `none (chat-only)` | `gh pr create` | `gh pr edit` (from the `GH_INSTALLED`/`HAS_REMOTE`/`PR_EXISTS` checks)

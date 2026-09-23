@@ -22,7 +22,7 @@ If a required section is missing or a field is blank/placeholder, add this line 
 - **`Alpha` tier** → recommend `Another model` for a foundational or risky spec, else offer without a strong push.
 - **`Prototype` tier, or no scope row** → recommend `Skip` (or `Same model` for a foundational spec).
 
-Present the panel (capability first: `ask_user_question` (on pi), else the same options as plain text; exactly one option marked recommended per the tier rule above, the picker adds the custom slot):
+Present the panel (capability first: your agent's picker, else the same options as plain text; exactly one option marked recommended per the tier rule above, the picker adds the custom slot):
 - **question**: "Cross check this spec before you review it? (Recommended: `<tier-based pick>`.)"
 - **header**: "Cross check"
 - **options**:
@@ -50,7 +50,7 @@ Act on the pick:
    Cross-check: <one-line verdict + any issue raised · or "you're reviewing it yourself" · or "skipped">
    ```
 
-   Then present the confirmation decision panel (capability first: `ask_user_question` (on pi), else the same options as plain text):
+   Then present the confirmation decision panel (capability first: your agent's picker, else the same options as plain text):
    - **question**: "Accept this spec, or change it?"
    - **header**: "spec"
    - **options**: `Accept, looks solid (recommended)` · `Change something, I'll tell you what` · `Rethink the approach`

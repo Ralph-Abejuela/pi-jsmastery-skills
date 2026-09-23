@@ -1,6 +1,6 @@
 ---
 name: test
-allowed-tools: pwsh, read, write, edit, agent, ask_user_question
+allowed-tools: read, write, edit, bash, grep, find
 description: "Run /test to write a test suite for code you just built or changed, after implementing a feature, route, or fix. Targets uncommitted changes automatically, reads test preferences.json for your framework (asks and saves it if absent), and picks the right strategy per file: happy path, edge cases, error states, accessibility."
 ---
 
@@ -14,7 +14,7 @@ Write everything this skill produces, files and messages alike, in plain simple 
 
 Role: a senior test engineer writing the suite the code deserves. Test what a caller relies on and what would actually break someone, not lines for a coverage number. Pick a strategy per file by reading what it is. Refuse tests that lock in scaffolding the slice was never meant to make real.
 
-Target: the code changed in this branch but not yet committed. Each changed file is classified (pure logic, component, API route, page/flow) and tested with the right strategy. The main thread writes the tests itself (a read only `scout` may do the heavy file reading for a large set); with a governing spec, tests trace to its acceptance criteria (Steps 7 and 8).
+Target: the code changed in this branch but not yet committed. Each changed file is classified (pure logic, component, API route, page/flow) and tested with the right strategy. The main thread writes the tests itself (a read only subagent may do the heavy file reading for a large set); with a governing spec, tests trace to its acceptance criteria (Steps 7 and 8).
 
 Does not write application code. Does not update `AGENTS.md`/`CLAUDE.md` context files (/sync owns that).
 
@@ -35,11 +35,11 @@ Does not write application code. Does not update `AGENTS.md`/`CLAUDE.md` context
 ## Portability (any OS, any agent)
 
 Any Agent Skills client on macOS, Linux, or Windows:
-- `git` is the only required CLI, identical everywhere; run the `git` lines as shown. Other shell snippets are POSIX reference, not literal scripts: do not assume `find`, `grep`, `sed`, `cat`, `test`/`[ ]`, `xargs`, `mkdir -p`, or `node -e` exist. Use your agent's cross platform file tools (read, search/glob, write) and apply branching logic yourself, not via shell `if`/variables/redirects.
+- `git` is the only required CLI, identical everywhere; run the `git` lines as shown. Other shell snippets are POSIX reference, not literal scripts: do not assume `find`, `grep`, `sed`, `cat`, `test`/`[ ]`, `xargs`, `mkdir -p`, or `node -e` exist. Use your agent's cross platform file tools (read, grep, find, write) and apply branching logic yourself, not via shell `if`/variables/redirects.
 - Bundled files: referenced relative to this skill's folder. The main thread resolves the folder to an absolute path and reads the bundled files itself at write time (Step 8): `agent-prompt.md` and `writing-guide.md`.
 - No interactive question support? Ask any multiple choice question as plain text with the same options.
 
-In the Ask blocks below, each option is `"label": "description"`; render them through your agent's picker (`ask_user_question` (on pi)) or as plain text.
+In the Ask blocks below, each option is `"label": "description"`; render them through your agent's picker or as plain text.
 
 ## Execution
 
@@ -147,7 +147,7 @@ go get <testify module path>                                      # Go
 
 #### 7. Gather lightweight pointers (do NOT read heavy files here)
 
-Paths and cheap signals only; the heavy reading happens at write time (by you, or a `scout` if offloaded). Do not read specs, `design.md`, or source files in full here.
+Paths and cheap signals only; the heavy reading happens at write time (by you, or a read only subagent if offloaded). Do not read specs, `design.md`, or source files in full here.
 
 With file tools:
 - List the 3 most recently modified spec paths under `docs/specs/` (paths only).
@@ -170,13 +170,13 @@ Set `RUN_AFTER = yes | no` and apply it at write time.
 
 #### 8. Write the suite (main thread)
 
-The main thread writes the tests itself. Do not spawn a writer. Resolve this skill's folder to an absolute path and Read `agent-prompt.md` and `writing-guide.md` now (only now, at write time): `agent-prompt.md` is your operating template, `writing-guide.md` is the strategy, tool rules, iteration loop, and report format you follow. Reading the changed files under test is the one expensive part; for a large or unfamiliar set, offload just the reading to a read only `scout` subagent on the cheapest model (pi: `haiku`, not inheriting the session model) that returns a compact map, then write from it.
+The main thread writes the tests itself. Do not spawn a writer. Resolve this skill's folder to an absolute path and Read `agent-prompt.md` and `writing-guide.md` now (only now, at write time): `agent-prompt.md` is your operating template, `writing-guide.md` is the strategy, tool rules, iteration loop, and report format you follow. Reading the changed files under test is the one expensive part; for a large or unfamiliar set, offload just the reading to a read only subagent on the cheapest model (not inheriting the session model) that returns a compact map, then write from it.
 
 The inputs to apply (the labeled values you gathered):
 1. unit tool, E2E tool, additional tools, `INSTALL` state; `testDir`, `filePattern`, package manager, stack/framework, `packageRoot`; the classified scope (each file path with its class: logic / component / page flow / api server / cli); `RUN_COMMAND`, `RUN_AFTER`; project context plus the build approach line; the 3 recent spec paths or `none` (read only if relevant to what you're testing); the design.md path or `none`; `TRACE_TO_CONTRACT`, the governing spec path, and the `verify.md` path (each `none` if absent).
 2. Two rules to apply: (a) let the build approach calibrate which behaviors are durably real for this slice (lock those in as stable assertions) versus deliberate scaffolding the slice fakes by design (don't assert a real implementation the plan hasn't built yet, e.g. a real backend expectation on a shell that stubs its data). (b) when `TRACE_TO_CONTRACT = yes`, read the acceptance criteria (from `verify.md` if present, preferring its already resolved `AC-N`-tagged checklist, else the spec's `## Requirements`) and lock in the durable ones: an automated test for every criterion that can be pinned as a stable assertion, each test tagged with the `AC-N` it covers (e.g. a `covers: AC-3` comment, or `AC-3` in the test title) so the suite traces back to the contract. Never fake a criterion that can't be automated (visual/manual/environmental, e.g. "email actually arrives"); record it in `NOT_COVERED` as `AC-N, <why not automatable> → defer to /check verify manual step`.
 
-Monorepo (multiple package roots from Step 1b): write each root's suite in turn, scoped to its root's files, tool, and package manager (offload each root's file reading to its own `scout` if large). Single root (common case): just write it.
+Monorepo (multiple package roots from Step 1b): write each root's suite in turn, scoped to its root's files, tool, and package manager (offload each root's file reading to its own read only subagent if large). Single root (common case): just write it.
 
 ---
 

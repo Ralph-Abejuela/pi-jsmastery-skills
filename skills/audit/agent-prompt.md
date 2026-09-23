@@ -1,6 +1,6 @@
 # Audit Writing Guide (main thread)
 
-You, the main thread, follow this to write the `AGENTS.md` files. ALL_CAPS placeholders are the inputs you gathered in `pre-flight` and the question rounds (listed in each phase mode file). You do the writing; the only subagent is a read only `scout` that maps a large codebase on the cheapest model.
+You, the main thread, follow this to write the `AGENTS.md` files. ALL_CAPS placeholders are the inputs you gathered in `pre-flight` and the question rounds (listed in each phase mode file). You do the writing; the only subagent is a read only one that maps a large codebase on the cheapest model.
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: scope
-allowed-tools: pwsh, read, write, edit, agent, ask_user_question
+allowed-tools: read, write, edit, bash, grep, find
 description: "Run /scope to turn a product idea into a living, coarse scope in docs/scope/ and keep it current: plan a new product, plan the next slice, enroll one named feature, or run with no argument to reconcile after shipping and queue what is next. Seeds WHAT to build; /architect designs, /develop builds."
 ---
 
@@ -31,7 +31,7 @@ Never pick tools: no provider, library, ORM, host, or BaaS chosen or named; that
 
 ## Decision panels (every user facing choice)
 
-Every choice is an options panel, never a neutral menu: 2 to 4 concrete options real to this product; exactly one marked `(recommended)` with a one line why (make the call, let them override). Never add your own Other option, the picker appends a free text Other automatically; offer free text yourself only in a plain text fallback with no picker. Capability first: use the agent's picker (`ask_user_question` (on pi)), else the same options as plain text; batched rounds same rule, up to 4 per round.
+Every choice is an options panel, never a neutral menu: 2 to 4 concrete options real to this product; exactly one marked `(recommended)` with a one line why (make the call, let them override). Never add your own Other option, the picker appends a free text Other automatically; offer free text yourself only in a plain text fallback with no picker. Capability first: use the agent's picker, else the same options as plain text; batched rounds same rule, up to 4 per round.
 
 ## Artifact ownership
 

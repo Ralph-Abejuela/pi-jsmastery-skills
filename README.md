@@ -16,16 +16,20 @@ Run `/debug` anytime something breaks. Run a bare `/scope` anytime to see where 
 
 This is a **pi-tailored port** of [JavaScript-Mastery-Pro/skills](https://github.com/JavaScript-Mastery-Pro/skills): the same idea → shipped workflow (`/scope` → `/audit` → `/architect` → `/develop` → `/check` → `/test` → `/document` → `/sync`, plus `/debug`), with the instructions that name tools and subagent types rewritten for the [pi coding agent](https://github.com/earendil-dev/pi).
 
-The delta is small on purpose. Upstream's `main` is this fork's base, so the whole difference is visible in one compare view: 62 skill files on both sides with the same file set, 33 of them differ, 124 lines added and 127 removed out of 5447. The workflow design is upstream's.
+The delta is small on purpose. Upstream's `main` is this fork's base, so the whole difference is visible in one compare view: 62 skill files on both sides with the same file set, 35 of them differ, 145 lines added and 148 removed out of 5447. The workflow design is upstream's.
 
 What changed vs upstream:
 
-- **Tool names** — `pwsh`, `read`, `write`, `edit`, `agent`, `ask_user_question` instead of `Bash` / `Read` / `AskUserQuestion`; `rg` / `fd` for search.
-- **Subagents** — pi's `scout` and `researcher` types, with pi model hints (`pi: haiku`, `pi: sonnet`).
+- **Tool names** — `allowed-tools` declares pi's built-in tools (`read`, `write`, `edit`, `bash`, `grep`, `find`) instead of `Bash` / `Read` / `Grep` / `Glob` / `Write` / `Edit` / `Agent` / `AskUserQuestion`.
+- **Subagents** — capability first. Where upstream named a subagent type, this port names what it is for (a read only code scan, a web research pass) and leaves the type to your client. Nothing assumes a specific subagent tool.
 - **Session commands** — `/new` instead of `/clear`.
 - **`/check review`** — detects the author model from pi's config (`defaultProvider` / `defaultModel` in `.pi/settings.json` or `~/.pi/agent/settings.json`) and picks the contrasting reviewer from **pi's scoped models** (`/scoped-models`, the `enabledModels` setting, or `pi --list-models`) instead of assuming predefined Anthropic model names.
 
-Nothing machine-specific ships in the skill files: no personal paths, no editor/extension details from any one setup — the marked difference is pi itself. `origin` is this fork; `upstream` is [JavaScript-Mastery-Pro/skills](https://github.com/JavaScript-Mastery-Pro/skills). This port is maintained by porting upstream changes rather than rebasing.
+Nothing machine-specific ships in the skill files: no personal paths, no editor details, and no extension details from any one setup. Every tool the corpus names is a pi built-in, and `scripts/check-portability.mjs` enforces that, so a skill cannot quietly depend on an extension again.
+
+**Optional extensions.** The skills get better with an agent that has subagents, an interactive question picker, or web tools, and each one degrades to a documented fallback without them: ask the same options as plain text, or do the reading inline. No extension is required.
+
+`origin` is this fork; `upstream` is [JavaScript-Mastery-Pro/skills](https://github.com/JavaScript-Mastery-Pro/skills). This port is maintained by porting upstream changes rather than rebasing.
 
 ## The skills
 

@@ -1,6 +1,6 @@
 ---
 name: develop
-allowed-tools: pwsh, read, write, edit, agent, ask_user_question
+allowed-tools: read, write, edit, bash, grep, find
 description: "Run /develop to build a feature, UI or backend, from an approved design, a page, component, API, service, or data slice. If something load bearing is undecided and no spec records it, it stops and routes you to /architect; otherwise it reads the spec plus AGENTS.md, builds, and advances the scope."
 ---
 
@@ -31,7 +31,7 @@ Gates, then acts: no upfront question rounds like `/architect`. Read the decisio
 
 ## Portability (any OS, any agent)
 
-Any Agent Skills client, macOS/Linux/Windows. Detection snippets are POSIX reference; use your agent's own cross platform file tools. Builds inline on the main thread (Step 3); the only subagents are a read only `scout` that explores code (Step 2.5) and a read only `researcher` for a doc check (Step 2.6, degrading to building from knowledge without web capability), both on the cheapest model. Bundled guides (`ui-guide.md`, `logical-guide.md`, `checklist.md`) and the build flow after the gate (`flow/build.md`) are paths relative to this skill's folder; the main thread reads them. No interactive question picker → ask the prompts as plain text with the same options.
+Any Agent Skills client, macOS/Linux/Windows. Detection snippets are POSIX reference; use your agent's own cross platform file tools. Builds inline on the main thread (Step 3); the only subagents are a read only one that explores code (Step 2.5) and a read only one for a doc check (Step 2.6, degrading to building from knowledge without web capability), both on the cheapest model. Bundled guides (`ui-guide.md`, `logical-guide.md`, `checklist.md`) and the build flow after the gate (`flow/build.md`) are paths relative to this skill's folder; the main thread reads them. No interactive question picker → ask the prompts as plain text with the same options.
 
 ## Execution
 
@@ -80,7 +80,7 @@ Read only what this feature needs, never the whole `docs/` tree: its one scope f
 2. **Open the governing spec via the feature's `spec` pointer**, reading only its build spec sections as defined in the build flow (`flow/build.md`), Step 2 item 1. Found → it's the spec; proceed. No pointer and no linked spec → targeted look in `docs/specs/<workspace>/` for one matching this feature's scope, never a blanket read.
 3. The **nearest** `AGENTS.md` (workspace/area) may already capture the decision, synced from an earlier feature (e.g. "the auth provider is already chosen") → proceed without a new spec.
 
-Decision owed and unrecorded → don't guess, don't silently stop. Ask (single select; `ask_user_question` (on pi)):
+Decision owed and unrecorded → don't guess, don't silently stop. Ask (single select; your agent's picker):
 
 - **question**: "This looks like it needs an architecture decision first: `<name the specific load-bearing choice, e.g. 'which auth provider + session model'>`. How do you want to handle it?"
 - **header**: "spec first?"

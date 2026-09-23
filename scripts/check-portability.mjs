@@ -23,13 +23,16 @@
 //     skill's description loads into every session.
 //  7. Every skill ships its OpenAI Codex adapter (`agents/openai.yaml`)
 //     with the `interface:` fields present.
-//  8. `allowed-tools` names the subagent tool `Agent`, not the legacy `Task`.
+//  8. `allowed-tools` names pi built-in tools only — no extension tool, and no
+//     other client's vocabulary.
 //  9. A marked contract block duplicated across skills stays byte-identical.
 // 10. No em or en dash in any instruction file or `description` (the skills teach
 //     the no-dash rule, so their own prose follows it).
 // 11. No hyphen in prose. Compounds become simple words (read only, not read-only).
 //     Code, paths, flags, ALL CAPS keywords, and the parsed artifact literals
 //     (in-progress, gap-fill, whole-repo, Follow-up, pre-flight) keep theirs.
+// 12. No extension tool name and no other client's vocabulary in the corpus.
+//     A skill that needs one is not a skill for pi.
 //
 // Budgets (rule 5) are also reported as utilization on every run, and anything
 // above WARN_AT is called out while it is still passing. See BUDGET POLICY below.
@@ -79,6 +82,17 @@ const SUPPORT_MD_OVERRIDES = {
   'architect/internal/design-conversation.md': 29 * 1024, // main-thread design walk; tool discovery split to internal/tool-discovery.md; split by stage if it grows further
 };
 const DESCRIPTION_CHAR_CAP = 400;
+
+// Rule 8 vocabulary. `allowed-tools` is a pre-approved tool list, and its names are
+// per client; this port targets pi. Anything outside this set does not exist on a
+// stock pi install: an extension tool (`pwsh`, `agent`, `ask_user_question`) or
+// another client's vocabulary (`Bash`, `Read`, `Task`).
+const PI_BUILTIN_TOOLS = new Set(['read', 'bash', 'powershell', 'edit', 'write', 'grep', 'find', 'ls']);
+
+// Rule 12 vocabulary: the extension tools and other clients' names this port must
+// not depend on. `scout` and `researcher` are custom agent types a user may or may
+// not define, so the corpus names the capability instead of the type.
+const EXTENSION_TOKENS = ['pwsh', 'ask_user_question', 'search/glob', '`scout`', '`researcher`'];
 const HOT_PATH_BUDGETS = [
   {
     name: 'architect main full-design path',
@@ -234,12 +248,17 @@ function check(path) {
     violations.push(`${rel}: missing \`allowed-tools\` in frontmatter`);
   }
 
-  // Rule 8 — the subagent tool is `Agent`. Claude Code renamed `Task` to `Agent`
-  // in 2.1.63 and keeps `Task` only as a back-compat alias; declare the real name.
+  // Rule 8 — `allowed-tools` names pi built-in tools only. See PI_BUILTIN_TOOLS.
   if (isSkillMd) {
     const at = frontmatter(text).match(/^allowed-tools:\s*(.*)$/m);
-    if (at && /\bTask\b/.test(at[1])) {
-      violations.push(`${rel}: allowed-tools declares \`Task\` — the subagent tool is now \`Agent\` (Task is a legacy alias)`);
+    if (at) {
+      for (const name of at[1].split(',').map((s) => s.trim()).filter(Boolean)) {
+        if (!PI_BUILTIN_TOOLS.has(name)) {
+          violations.push(
+            `${rel}: allowed-tools names \`${name}\`, which is not a pi built-in tool (${[...PI_BUILTIN_TOOLS].join(', ')})`
+          );
+        }
+      }
     }
   }
 
@@ -310,6 +329,15 @@ function check(path) {
     // Rule 4 — no PowerShell-breaking shell glue in SKILL bodies
     if (isSkillMd && (/>\/dev\/null/.test(line) || /&&\s*BASE=/.test(line) || /\|\|\s*BASE=/.test(line))) {
       violations.push(`${rel}:${n}: non-portable shell glue (\`>/dev/null\`/\`&& BASE=\`) — express base-branch selection as prose`);
+    }
+    // Rule 12 — no extension tool name and no other client's vocabulary. These
+    // names came from one machine's extension set.
+    for (const bad of EXTENSION_TOKENS) {
+      if (line.includes(bad)) {
+        violations.push(
+          `${rel}:${n}: names \`${bad}\`, which is not a pi built-in — a stock pi install does not have it`
+        );
+      }
     }
     // Rule 10 — the corpus obeys the no-dash rule it teaches. Every skill tells the
     // model to emit no em or en dash; an instruction file full of them is the wrong

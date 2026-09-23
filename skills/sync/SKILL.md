@@ -1,6 +1,6 @@
 ---
 name: sync
-allowed-tools: pwsh, read, write, edit, agent
+allowed-tools: read, write, edit, bash, grep, find
 description: "Run /sync as the last step after a change is complete, around merge, to keep durable knowledge current. Updates root and nested AGENTS.md, reconciles the scope from repo evidence, and flags specs the change made stale. Surgical edits only: it adds lines, and rewrites single lines it owns. Never a whole section, never curated prose."
 ---
 
@@ -78,7 +78,7 @@ Remove duplicates, then **filter to source files** to sync *from*:
 
 ### 2. Locate the context files and specs (paths only, do NOT read them here)
 
-Using your agent's file search/glob tools:
+Using your agent's file search tools (`grep`, `find`):
 - Note whether a root `AGENTS.md` exists.
 - Find every `AGENTS.md` (root + nested), excluding `node_modules/` and `.git/`.
 - Find all specs under `docs/specs/` whose names start with a digit, sorted.
@@ -99,7 +99,7 @@ Run only when dependency manifests changed or the diff clearly adds a significan
   <!-- TOOL-CONSENT:END -->
 
   Name the tools this change added, say in one line that an Agent Skill gives the agent that tool's real conventions and an MCP server gives it live access to the real system, then ask: "Want me to find Agent Skills and MCP servers for the tools this change added?" (header `Agent skills`), with `Yes, find them for me` (recommended) · `I'll name the ones I want` · `No, skip it` · `Not now, later`. On `Yes` continue below. On `I'll name the ones I want`, take the list and go straight to the install step, searching for nothing. On `No, skip it` run nothing and record the decline. On `Not now, later` run nothing and note the candidate tools in the report.
-- **Isolate the searches in a read only subagent (capability first, only after `Yes`).** Hand the remaining set to a discovery subagent rather than searching on the main thread: spawn it in the background (it does not block) if your agent supports that, else blocking; set its model explicitly to a fast, low cost tier (do not inherit the session model; on pi spawn it as the `researcher` subagent type, which pins the model); it returns only the compact candidate list. This keeps the search output out of `/sync`'s bounded context. No subagent → search inline; no search capability → skip and note it. The offer panel stays on the main thread.
+- **Isolate the searches in a read only subagent (capability first, only after `Yes`).** Hand the remaining set to a discovery subagent rather than searching on the main thread: spawn it in the background (it does not block) if your agent supports that, else blocking; set its model explicitly to a fast, low cost tier (do not inherit the session model); it returns only the compact candidate list. This keeps the search output out of `/sync`'s bounded context. No subagent → search inline; no search capability → skip and note it. The offer panel stays on the main thread.
 - For each remaining item, run `npx skills find <tool-or-package>`; if weak, retry aliases from package/org names. Collect every credible Agent Skill candidate and confirm with `npx skills add <owner>/<repo> --list` when practical. If the CLI is interactive/unavailable, search `"<tool>" "agent skill"` and confirm before offering.
 - MCP search is optional: connector list first, else `"<tool>" "MCP server"` per item. MCP is recommended upside, not required.
 - Keep discovery capped and cacheable: max 5 web searches and 8 fetched pages total, official registry/docs first. Reuse `docs/.agent-cache/tool-discovery/<slug>.md` when under 30 days old, after filtering installed/declined items.
@@ -109,7 +109,7 @@ Run only when dependency manifests changed or the diff clearly adds a significan
 
 ### 3. Do the maintenance (main thread)
 
-The main thread does the maintenance itself; it never hands the `AGENTS.md` / scope / spec status edits to a subagent. Read `agent-prompt.md` now (only now, at write time) and follow it exactly; it is authoritative for the maintenance rules. The diff reading is the one thing you may offload, and only for a large change set, to a read only `scout` subagent on the cheapest model (pi: `haiku`) that returns a compact map. Stay within the same boundaries the old tool grant expressed: `Edit` existing docs, scope, and spec `**Status**:` lines; `Write` strictly for a **net new area** nested AGENTS.md; no root creation, no spec *content* edits (Status line only), no shallow nested docs for established areas (these are rules in `agent-prompt.md`).
+The main thread does the maintenance itself; it never hands the `AGENTS.md` / scope / spec status edits to a subagent. Read `agent-prompt.md` now (only now, at write time) and follow it exactly; it is authoritative for the maintenance rules. The diff reading is the one thing you may offload, and only for a large change set, to a read only subagent on the cheapest model that returns a compact map. Stay within the same boundaries the old tool grant expressed: `Edit` existing docs, scope, and spec `**Status**:` lines; `Write` strictly for a **net new area** nested AGENTS.md; no root creation, no spec *content* edits (Status line only), no shallow nested docs for established areas (these are rules in `agent-prompt.md`).
 
 The inputs to apply:
   1. `MODE`, `BASE`, `MERGE_BASE`, `CHANGED_FILES` (name status changed source list), `DIFF_COMMAND` (exact `git diff` command)

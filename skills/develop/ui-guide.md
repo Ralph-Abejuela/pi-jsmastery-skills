@@ -68,7 +68,7 @@ Before generating a fresh design system, check for an existing visual language t
 - Styling, token, or theme files: wherever this platform keeps them (a CSS/token/theme file on web, the theme or style module on mobile or desktop).
 - Component directories: the existing component or screen tree.
 
-Found (brownfield): ask before proceeding, via your agent's interactive option picker (`ask_user_question` (on pi)) or plain text options with the same choices:
+Found (brownfield): ask before proceeding, via your agent's interactive option picker or plain text options with the same choices:
 - **question**: "There's no `design.md`, but this project already has UI. How should I get the design system?"
 - **header**: "Design system"
 - **options**:

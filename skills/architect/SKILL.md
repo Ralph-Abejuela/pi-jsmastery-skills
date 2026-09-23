@@ -1,6 +1,6 @@
 ---
 name: architect
-allowed-tools: pwsh, read, write, edit, agent, ask_user_question
+allowed-tools: read, write, edit, bash, grep, find
 description: "Run /architect when choosing between approaches, designing a feature or page, picking a tech stack, or when /develop says a decision is owed, anytime a load bearing technical decision is unmade. Asks deep questions, recommends an answer, and writes a build spec to docs/specs/. Owns all spec files."
 ---
 
@@ -41,8 +41,8 @@ Writes no code. Never updates `AGENTS.md`/`CLAUDE.md` (/sync owns that).
 
 The main thread runs the conversation and writes the spec; it never hands the writing or any fix to a subagent. Every subagent it spawns is read only and never inherits the session model:
 
-- **Read the codebase** (cheapest model, pi `haiku`): a read only scan of existing code when the repo is large (ENHANCEMENT/CROSS-CUTTING). pi: the `scout` type. Returns a compact map, never file dumps.
-- **Fetch from the web** (cheapest model, pi `haiku`): the current tool landscape check and the Agent Skill / MCP discovery, both during the design conversation (Stage c), when a decision needs current facts. pi: the `researcher` type. Returns a compact summary, never raw pages.
+- **Read the codebase** (cheapest model): a read only scan of existing code when the repo is large (ENHANCEMENT/CROSS-CUTTING). Use a read only subagent when your client provides one. Returns a compact map, never file dumps.
+- **Fetch from the web** (cheapest model): the current tool landscape check and the Agent Skill / MCP discovery, both during the design conversation (Stage c), when a decision needs current facts. Use a web research subagent when your client provides one. Returns a compact summary, never raw pages.
 - **Cross check the drafted spec** (its primary job is decision completeness: finding values an action must produce whose source the spec never names, and decisions the builder would otherwise invent): a read only pass that reads the finished spec and returns a critique, writing nothing. `/architect` **always asks** whether to run it (never runs or skips it on the engineer's behalf), recommending `Another model` strongly at `GA`/`Beta` (the tiers where these bugs live), offering it at `Alpha`, and recommending `Skip` at `Prototype`; any gap it finds is presented to the engineer with a recommended fix for them to decide, not auto resolved. See *After the spec is written*.
 
 Web fetching happens once, when a decision needs it (the Stage (c) landscape and tool discovery checks). The links it returns go into the spec's References for a human to follow; the AI never fetches them again (not in the cross check, `/develop`, or `/audit`).
@@ -82,7 +82,7 @@ Two independent choices, location (repo shape) and shape (decision size):
 
 ## Portability (any OS, any agent)
 
-- **Commands**: `git` is the only required CLI, same on every OS. Other shell snippets (`mkdir -p`, `date`, `find`, `ls`, `cat`, `wc`) are POSIX reference, not literal scripts; use your agent's cross platform file tools (read, search/glob, write, create dir) and your knowledge of today's date. Create `docs/specs/` with your write tool, not `mkdir`.
+- **Commands**: `git` is the only required CLI, same on every OS. Other shell snippets (`mkdir -p`, `date`, `find`, `ls`, `cat`, `wc`) are POSIX reference, not literal scripts; use your agent's cross platform file tools (read, grep, find, write, create dir) and your knowledge of today's date. Create `docs/specs/` with your write tool, not `mkdir`.
 - **Bundled files**: `agent-prompt.md`, `agent-modes/*.md`, and `spec-template.md` live at paths relative to this skill's folder. The main thread reads these itself right before it writes the spec (see *Write the spec*): `agent-prompt.md` (the persona, rules, and report format), the one matching `agent-modes/<mode>.md`, and `spec-template.md` (the section structure). Read them only at write time, not during pre-flight, so they don't sit in context through the whole interview.
 - **No interactive question support?** Use whatever your agent provides (an options picker) and fall back only where missing: ask the question rounds as plain text with the same options.
 
@@ -106,7 +106,7 @@ Run these steps (the `git` commands are literal; everything else uses your agent
 - **Resolve the spec location** (`SPEC_DIR`) = the scope workspace mirrored into `docs/specs/`: single repo → `docs/specs/`; monorepo workspace → `docs/specs/<workspace>/`; repo wide → `docs/specs/_root/`. Determine `<workspace>` as the scope does (topic/path/scope row). Create the directory if missing.
 - **Today's date**: use today's date (inject it into the spec).
 - **List existing specs in this location**: files named `NNNN-*.md` plus any `index.md` in `$SPEC_DIR`, for numbering (per location) and related decision detection.
-- **Count source files** (e.g. `.ts`, `.tsx`, `.js`, `.py`, `.go`, `.rs`, `.java`), excluding `node_modules/`, `.git/`, `dist/`. Informs how much code there is to read, and whether to offload that reading to a `scout` subagent.
+- **Count source files** (e.g. `.ts`, `.tsx`, `.js`, `.py`, `.go`, `.rs`, `.java`), excluding `node_modules/`, `.git/`, `dist/`. Informs how much code there is to read, and whether to offload that reading to a read only subagent.
 - **Read project context**, the source of truth for the stack and community skills: root `AGENTS.md` (fall back to `CLAUDE.md`, else MISSING), plus the nested `<area>/AGENTS.md` for this feature's area if one exists (e.g. `src/auth/AGENTS.md` for an auth feature).
 - **Read the build approach for THIS feature**: the delivery strategy that governs how the spec's `## Build plan` is ordered and sliced. Precedence: this feature's scope row `Approach` override if declared, else the project default (root `AGENTS.md` first, else the scope header in `docs/scope/`). A feature with its own approach is built by ITS approach; others use the project default. The four imply materially different `## Build plan` orderings, not the same order relabeled: **Tracer Bullet** stands up a thin end to end thread through every layer first, then thickens; **Skateboard** builds the thinnest usable whole first, then grows; **Facade** leads with the UI shell on placeholder data and defers the migration (a prototype path); **Journey** completes one user path's tasks fully before the next. A project specific variant is possible. If neither records one, note the assumption and set the default by Staff/Principal judgment (prefer end to end Tracer Bullet slices for production work). Let the recorded approach visibly shape the ordering.
 - **Locate the linked scope feature (if any):** cheaply scan `docs/scope/` filenames/headings (including per workspace subdirs) for a feature matching this topic; open only the single scope file containing it (`scope.md`, or the matching `<epic>.md` in a split). If found, read that row's intent plus any acceptance criteria seeds (they seed Stage (a)) and remember the file/row for the derive tasks and linking steps; this also settles feature linked vs standalone status. If no row matches, note the standalone decision path and don't create one now.
@@ -164,7 +164,7 @@ The inputs to apply (you already have them from the design conversation and pre-
 5. Existing spec list (filenames + first line of each)
 6. Related spec paths (flagged in pre-flight)
 7. The resolved spec location (`$SPEC_DIR`), next number, and shape: a single file `$SPEC_DIR/NNNN-title.md`, or a directory `$SPEC_DIR/NNNN-title/` (`index.md` + `rationale.md`, plus child specs for an umbrella). Umbrella: write the named child decisions; any inventory/audit goes in `rationale.md`, never in `docs/scope/`, never loose in the code tree. Only the `index.md` carries a `**Status**:` line (it mirrors the feature); child specs omit the lifecycle Status (spec content governed by the umbrella)
-8. Source file count (whether there's code to read; for a large ENHANCEMENT/CROSS-CUTTING codebase, offload the reading to a `scout` subagent per *Subagents* and write from its map)
+8. Source file count (whether there's code to read; for a large ENHANCEMENT/CROSS-CUTTING codebase, offload the reading to a read only subagent per *Subagents* and write from its map)
 9. Operation: `create` | `update` | `supersede`
 10. Today's date (from pre-flight)
 11. Documentation context (if the "already built" path ran: the engineer's free text answers about why this was chosen, alternatives, and tradeoffs)
@@ -201,6 +201,6 @@ Either way, ratification is why an `Assumed` spec can leave that state: `/develo
 - Spec writing rules & persona: `agent-prompt.md` (the main thread reads it at write time)
 - Mode specific writing instructions: `agent-modes/*.md` (read only the matching mode file, at write time)
 - Main thread design conversation: `internal/design-conversation.md` (read only for create/supersede)
-- Agent Skill & MCP offer: `internal/tool-discovery.md` (read only when the stack walk settles a new tool; it asks before it searches, and the registry fetch then runs in a `researcher` subagent)
+- Agent Skill & MCP offer: `internal/tool-discovery.md` (read only when the stack walk settles a new tool; it asks before it searches, and the registry fetch then runs in a web research subagent)
 - Main thread completion flow: `internal/after-subagent.md` (read only after the spec is written)
 - The staged design conversation is generated per feature (see *Staged design conversation*, stages a to f), not stored; there are no canned question lists. If a topic is too vague to generate from, narrow it first (scope validation, or one clarifying question), never fall back to generic MCQs
