@@ -53,13 +53,15 @@ Hardening (systems level failure mode analysis) is temporarily removed and will 
 
 ### As a pi package
 
-Once published as [`pi-jsmastery-skills`](https://www.npmjs.com/package/pi-jsmastery-skills):
-
 ```bash
+# from git, works today
+pi install git:github.com/Ralph-Abejuela/pi-jsmastery-skills
+
+# from npm, once published as pi-jsmastery-skills
 pi install npm:pi-jsmastery-skills
 ```
 
-Pi reads the package's `skills/` folder directly, so the skills load next session with no copying and no symlinks. `pi list` shows it, `pi update --extensions` updates it, and `pi remove npm:pi-jsmastery-skills` takes it out again. See [Pi Packages](https://pi.dev/docs/latest/packages).
+Pi reads the package's `skills/` folder directly, so the skills load next session with no copying and no symlinks. `pi list` shows it, `pi update --extensions` updates it, and `pi remove <source>` takes it out again. Append a ref to pin one, such as `@v1.0.0` or `@main`. The `git:` or `npm:` prefix is required; a bare name is read as a local path. See [Pi Packages](https://pi.dev/docs/latest/packages).
 
 ### From this repo (any Agent Skills client)
 
