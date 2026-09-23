@@ -14,7 +14,9 @@ Run `/debug` anytime something breaks. Run a bare `/scope` anytime to see where 
 
 ## Why this repo exists
 
-This is a **pi-tailored port** of [jsmastery-pro/skills](https://github.com/jsmastery-pro/skills): the same idea → shipped workflow (`/scope` → `/audit` → `/architect` → `/develop` → `/check` → `/test` → `/document` → `/sync`, plus `/debug`), with every instruction rewritten to name the tools, commands, and behavior the [pi coding agent](https://github.com/earendil-dev/pi) actually has.
+This is a **pi-tailored port** of [JavaScript-Mastery-Pro/skills](https://github.com/JavaScript-Mastery-Pro/skills): the same idea → shipped workflow (`/scope` → `/audit` → `/architect` → `/develop` → `/check` → `/test` → `/document` → `/sync`, plus `/debug`), with the instructions that name tools and subagent types rewritten for the [pi coding agent](https://github.com/earendil-dev/pi).
+
+The delta is small on purpose. Upstream's `main` is this fork's base, so the whole difference is visible in one compare view: 62 skill files on both sides with the same file set, 33 of them differ, 124 lines added and 127 removed out of 5447. The workflow design is upstream's.
 
 What changed vs upstream:
 
@@ -23,7 +25,7 @@ What changed vs upstream:
 - **Session commands** — `/new` instead of `/clear`.
 - **`/check review`** — detects the author model from pi's config (`defaultProvider` / `defaultModel` in `.pi/settings.json` or `~/.pi/agent/settings.json`) and picks the contrasting reviewer from **pi's scoped models** (`/scoped-models`, the `enabledModels` setting, or `pi --list-models`) instead of assuming predefined Anthropic model names.
 
-Nothing machine-specific ships in the skill files: no personal paths, no editor/extension details from any one setup — the marked difference is pi itself. Upstream is kept as the git `origin`; this port is maintained by porting upstream changes rather than rebasing.
+Nothing machine-specific ships in the skill files: no personal paths, no editor/extension details from any one setup — the marked difference is pi itself. `origin` is this fork; `upstream` is [JavaScript-Mastery-Pro/skills](https://github.com/JavaScript-Mastery-Pro/skills). This port is maintained by porting upstream changes rather than rebasing.
 
 ## The skills
 
