@@ -188,7 +188,10 @@ function frontmatter(text) {
 // Rule 11 helpers. Prose carries no hyphens; code does. Mask every exempt region
 // with spaces (never delete, so byte offsets still map to line numbers), then any
 // hyphenated word left standing is prose and must be rewritten into simple words.
-const MASK = (s) => ' '.repeat(s.length);
+// Blank every non-newline character, so both byte offsets and LINE NUMBERS survive.
+// A plain run of spaces collapses the newlines inside a masked code block, which
+// shifted every later violation onto the wrong line.
+const MASK = (s) => s.replace(/[^\n]/g, ' ');
 function proseOnly(text) {
   return text
     .replace(/```[\s\S]*?```/g, MASK)      // fenced code blocks
@@ -198,7 +201,10 @@ function proseOnly(text) {
     .replace(/https?:\/\/\S+/g, MASK)      // bare urls
     // Frontmatter keys are defined by the Agent Skills spec (`allowed-tools`), so
     // only the description value is prose. Mask the keys, keep the description.
-    .replace(/^---\n[\s\S]*?\n---/m, (fm) =>
+    // Anchored at the string start (no `m` flag). With `m` this matched the first
+    // two `---` lines anywhere, so a support file carrying two horizontal rules
+    // had its whole body masked and every violation inside it hidden.
+    .replace(/^---\n[\s\S]*?\n---/, (fm) =>
       fm.split('\n').map((l) => (/^description:/.test(l) ? l : MASK(l))).join('\n')
     );
 }

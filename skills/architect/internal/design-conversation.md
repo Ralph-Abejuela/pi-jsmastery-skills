@@ -34,11 +34,11 @@ If product scoped, do not start the staged conversation yet:
 
 Infer the framing from the topic + `AGENTS.md` + codebase, don't ask it. State it back in a line or two so a wrong read is cheap to correct, then spend all questions on the feature:
 
-- **Mode**: `FEATURE` (new feature) · `ARCHITECTURE` (foundational stack) · `ENHANCEMENT` (changing something that exists) · `CROSS-CUTTING` (a project-wide standard). Infer from the topic and whether the thing exists in code; confirm only if genuinely ambiguous.
+- **Mode**: `FEATURE` (new feature) · `ARCHITECTURE` (foundational stack) · `ENHANCEMENT` (changing something that exists) · `CROSS-CUTTING` (a standard for the whole project). Infer from the topic and whether the thing exists in code; confirm only if genuinely ambiguous.
 - **Platform**: web · mobile · API/backend · a mix. Infer from the stack in `AGENTS.md`, never assume web; it changes the questions (mobile auth, offline, push differ from web).
-- **Workspace (monorepo)**: if a monorepo (workspaces config, or `apps/*`/`packages/*` manifests), identify which workspace this feature belongs to (topic, path, or the scope row's `Code area`; ask if unclear). Read that workspace's nested `AGENTS.md` for *its* stack (apps often differ; don't assume the root stack). Note the workspace in the spec's Context, and whether the decision is app-specific or repo-wide.
+- **Workspace (monorepo)**: if a monorepo (workspaces config, or `apps/*`/`packages/*` manifests), identify which workspace this feature belongs to (topic, path, or the scope row's `Code area`; ask if unclear). Read that workspace's nested `AGENTS.md` for *its* stack (apps often differ; don't assume the root stack). Note the workspace in the spec's Context, and whether the decision applies to one app or to the whole repo.
 - **Stack & conventions**: language, framework, DB, community skills, from `AGENTS.md` (the target workspace's in a monorepo). Inferred, never asked.
-- **Constraints**: team size, scale, compliance, from `AGENTS.md` / the product. Ask a per-feature compliance question only when *this* feature touches regulated data (payments, PII, health), never a generic deadline/team menu.
+- **Constraints**: team size, scale, compliance, from `AGENTS.md` / the product. Ask a compliance question for this feature only when *this* feature touches regulated data (payments, PII, health), never a generic deadline/team menu.
 
 State it: *"Reading this as a new **FEATURE** on your existing stack (from `AGENTS.md`), web (correct me if not)."* Then begin the staged design conversation.
 

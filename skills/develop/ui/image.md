@@ -7,9 +7,9 @@
 
 ---
 
-## Path A: Pixel-perfect from image
+## Path A: Pixel perfect from image
 
-The image was provided in chat (not a repo file); use the one in the conversation. Replicate it faithfully: the image is both the look and the composition, so match it, and do NOT embellish beyond it. The maximalist mandate is for the no-source path; here, fidelity to the reference governs. Tokenize what you see (values into the styling/theme system, character into `design.md`), and derive the responsive and accessible behavior a single screenshot cannot show (Phases 3 and 5). If the reference itself is a minimal screen, replicate it as given and note in the report that it is minimal.
+The image was provided in chat (not a repo file); use the one in the conversation. Replicate it faithfully: the image is both the look and the composition, so match it, and do NOT embellish beyond it. The maximalist mandate is for the path with no source; here, fidelity to the reference governs. Tokenize what you see (values into the styling/theme system, character into `design.md`), and derive the responsive and accessible behavior a single screenshot cannot show (Phases 3 and 5). If the reference itself is a minimal screen, replicate it as given and note in the report that it is minimal.
 
 ### A0: Multiple images?
 
@@ -23,11 +23,11 @@ Then run A1 on the primary (default/light) image.
 ### A1: Extract tokens from the image
 
 Extract exactly what is visible, never fabricate values.
-- **Colors**: canvas, surface(s), ink, body, muted, accent, accent-pressed, border, semantic colors; exact hex, not approximations
-- **Typography**: family name if recognizable, size scale anchored to body = 16px, weights, line-heights, letter-spacing
-- **Spacing**: 4px base unit; pad, gap, section rhythm, max-width
+- **Colors**: canvas, surface(s), ink, body, muted, accent, accent pressed, border, semantic colors; exact hex, not approximations
+- **Typography**: family name if recognizable, size scale anchored to body = 16px, weights, line heights, letter spacing
+- **Spacing**: 4px base unit; pad, gap, section rhythm, max width
 - **Geometry**: radius per element type, border widths, shadows (`x y blur spread color/opacity`), gradients, backdrop blur
-- **Motion**: infer from context; micro-interactions (~100ms), standard (~200ms), reveals (~350ms), easing character
+- **Motion**: infer from context; micro interactions (~100ms), standard (~200ms), reveals (~350ms), easing character
 - **Mode**: light or dark, contrast level, sharpness
 
 ### A2: Tokens to CSS, character to design.md

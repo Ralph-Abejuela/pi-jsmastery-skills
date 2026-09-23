@@ -10,9 +10,9 @@ Strategy, rules, tool specifics, iteration loop, and report format. Read at writ
 
 ### Existing tests: extend, never duplicate or clobber
 
-Before writing a new test file, look for one that already covers the source file (same base name with the test pattern, co-located or under TEST_DIR). If it exists:
+Before writing a new test file, look for one that already covers the source file (same base name with the test pattern, placed next to it or under TEST_DIR). If it exists:
 - **Extend it** with `Edit`, add the missing cases, keep the engineer's existing tests intact.
-- Never create a second parallel test file for the same source, and never overwrite hand-written tests.
+- Never create a second parallel test file for the same source, and never overwrite tests a person wrote.
 - If existing tests look wrong or contradict the current code, do not silently rewrite them, note them under `NOT_COVERED` as "existing tests may be stale" so the engineer decides.
 
 ### Config files: minimal and additive only
@@ -22,7 +22,7 @@ You generally write only test files. The one exception: if the chosen runner **c
 - Playwright with no `playwright.config.*`: create a minimal config (test dir, base webServer if obvious).
 - **Never edit an existing config**, if one is present, respect it and adapt the tests to it. List any conflict under `NOT_COVERED`.
 
-### Security-sensitive code: add security cases by default
+### Code that touches security: add security cases by default
 
 If any file in scope handles authentication, authorization, sessions, payments, or PII (signals: `auth`, `login`, `session`, `token`, `password`, `permission`, `role`, `payment`, `charge`, `webhook`, `checkout`), add cases for: unauthorized/forbidden access, missing/expired/tampered credentials, and that secrets or sensitive fields are not leaked in responses or logs. Note any security risk you cannot cover with a test in `NOT_COVERED`.
 

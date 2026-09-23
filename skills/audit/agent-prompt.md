@@ -52,7 +52,7 @@ What `/audit` does with them (every phase that writes or audits root):
 - **`## Git`** (from the git integration question): write the engineer's choice as a small block, e.g. `- integration: on` / `- branch prefix: feat/` / `- commit: per-milestone`, or just `- integration: off`. Absent means off. A recorded preference, not a mirrored source of truth; `/develop` reads it to branch and commit, `/document` to gate the PR.
 - **Auditing existing root** (gap-fill): either field missing or placeholder → ROOT_GAPS; either field contradicting its source → CONTRADICTIONS.
 
-This keeps the `/architect → /audit` handoff order-independent: root absorbs the decided stack whenever audit runs.
+This keeps the `/architect → /audit` handoff independent of order: root absorbs the decided stack whenever audit runs.
 
 ## Phase
 

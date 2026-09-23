@@ -35,13 +35,13 @@ Resolve where hero images, avatars, product/gallery photos, logos, illustrations
 - **options**:
   1. `I'll add the assets`: "Stop and let me drop real files in. Tell me the exact paths/filenames to reference and I'll wire them when they're added." → list the precise paths you'll expect (e.g. `public/hero.jpg`, `public/products/{1,2,3}.jpg`), then pause for the engineer.
   2. `Use placeholder service`: "Wire dynamic placeholders from a stock/placeholder service so the layout is real now; swap later." → use a reputable service (below), correct dimensions, descriptive `alt`.
-  3. `Local solid/gradient placeholders`: "No external requests, use CSS gradient/blocks at the right aspect ratios as stand-ins." → design tokens, never raw hex.
+  3. `Local solid/gradient placeholders`: "No external requests, use CSS gradient/blocks at the right aspect ratios as placeholders." → design tokens, never raw hex.
 
 The tool appends "Other" automatically.
 
 **Placeholder assets** (option 2), pick per need, correct dimensions, swappable behind one token/constant: use placeholder sources appropriate to the platform (on web, a reputable placeholder or stock photo/avatar service; elsewhere, bundled placeholder assets or the platform's asset catalog). For logos/illustrations use a neutral local placeholder, never a random remote logo.
 
-Placeholder rules: real `width`/`height` (or aspect-ratio box) to avoid layout shift; meaningful `alt` describing the intended content, not "placeholder"; centralise URLs/paths in one constant or token so the swap to real assets is one edit. Note placeholders and where to replace them in the report.
+Placeholder rules: real `width`/`height` (or an aspect ratio box) to avoid layout shift; meaningful `alt` describing the intended content, not "placeholder"; centralise URLs/paths in one constant or token so the swap to real assets is one edit. Note placeholders and where to replace them in the report.
 
 ---
 

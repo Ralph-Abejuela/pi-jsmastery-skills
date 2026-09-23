@@ -5,7 +5,7 @@ File path: `docs/specs/NNNN-kebab-case-title.md`
 ---
 
 === SPEC TEMPLATE START ===
-# NNNN. Title (concise, noun-phrase form, e.g. "Adopt a relational database for primary storage")
+# NNNN. Title (concise noun phrase form, e.g. "Adopt a relational database for primary storage")
 
 **Date**: YYYY-MM-DD
 **Status**: Proposed
@@ -163,7 +163,7 @@ N. <Build task>, satisfies **AC-N**
 - <what gets worse or costs more>
 
 **Neutral**:
-- <notable side-effects, migrations needed, new patterns to learn, etc.>
+- <notable side effects, migrations needed, new patterns to learn, etc.>
 
 ## Follow-up
 
@@ -194,7 +194,7 @@ N. <Build task>, satisfies **AC-N**
 <!-- Enhancement mode only, when migration is non-trivial. -->
 ## Migration plan
 
-**Strategy**: <strangler | big bang | feature-flagged | no migration needed>
+**Strategy**: <strangler | big bang | feature flagged | no migration needed>
 **Phases**:
 1. <Phase 1>
 2. <Phase 2>
@@ -213,7 +213,7 @@ N. <Build task>, satisfies **AC-N**
 - <Pattern that is now wrong>
 
 **Enforcement**:
-<Lint rule / compile-time type / other, and where it is configured>
+<Lint rule / compile time type / other, and where it is configured>
 
 **Rollout**:
 <New code immediately | single migration PR | gradual migration schedule>
