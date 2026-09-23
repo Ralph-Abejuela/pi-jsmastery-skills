@@ -5,6 +5,7 @@
   "keywords": [
     "pi",
     "pi-coding-agent",
+    "pi-package",
     "ai-coding",
     "agent-skills",
     "skills",
@@ -24,14 +25,12 @@
   },
   "files": [
     "skills",
-    "scripts/install.mjs",
     "README.md",
     "LICENSE"
   ],
   "scripts": {
     "check": "node scripts/check-portability.mjs",
     "test": "npm run check && node scripts/check-portability.test.mjs",
-    "tokens": "node scripts/analyze-token-usage.mjs",
-    "postinstall": "node scripts/install.mjs"
+    "tokens": "node scripts/analyze-token-usage.mjs"
   }
 }

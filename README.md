@@ -27,7 +27,7 @@ What changed vs upstream:
 
 Nothing machine-specific ships in the skill files: no personal paths, no editor details, and no extension details from any one setup. Every tool the corpus names is a pi built-in, and `scripts/check-portability.mjs` enforces that, so a skill cannot quietly depend on an extension again.
 
-**Optional extensions.** The skills get better with an agent that has subagents, an interactive question picker, or web tools, and each one degrades to a documented fallback without them: ask the same options as plain text, or do the reading inline. No extension is required.
+**Optional extensions.** Nothing here is required. Three pi extensions give pi the tools Claude Code has that pi leaves to extensions, and each has a documented fallback. See [Recommended pi extensions](#recommended-pi-extensions).
 
 `origin` is this fork; `upstream` is [JavaScript-Mastery-Pro/skills](https://github.com/JavaScript-Mastery-Pro/skills). This port is maintained by porting upstream changes rather than rebasing.
 
@@ -51,15 +51,15 @@ Hardening (systems level failure mode analysis) is temporarily removed and will 
 
 **pi** reads skills from `~/.pi/agent/skills/` (Windows: `%USERPROFILE%\.pi\agent\skills\`) — this repo's `skills/` folder is exactly that layout, one folder per skill.
 
-### From npm
+### As a pi package
 
 Once published as [`pi-jsmastery-skills`](https://www.npmjs.com/package/pi-jsmastery-skills):
 
 ```bash
-npm install -g pi-jsmastery-skills
+pi install npm:pi-jsmastery-skills
 ```
 
-The package's `postinstall` links every skill under `skills/` into `~/.pi/agent/skills/`, so pi picks them up next session — same pattern as the [bigpowers](https://www.npmjs.com/package/bigpowers) pi-skills package. Update with `npm update -g pi-jsmastery-skills`; uninstall with `npm uninstall -g pi-jsmastery-skills` (then remove the skill links from `~/.pi/agent/skills/`).
+Pi reads the package's `skills/` folder directly, so the skills load next session with no copying and no symlinks. `pi list` shows it, `pi update --extensions` updates it, and `pi remove npm:pi-jsmastery-skills` takes it out again. See [Pi Packages](https://pi.dev/docs/latest/packages).
 
 ### From this repo (any Agent Skills client)
 
@@ -74,6 +74,26 @@ npx skills@latest add Ralph-Abejuela/pi-jsmastery-skills
 Works on any Agent Skills client that reads a skills folder (Claude Code, Cursor, Codex, Gemini CLI, and [more](https://agentskills.io/clients)). Commit the installed skills folder to share the workflow with your team.
 
 Each skill's instructions live in its `SKILL.md`, which is what every client reads. The `agents/openai.yaml` beside it is interface metadata only (the name, blurb, and opening prompt Codex shows in its agent picker); it carries no logic of its own.
+
+## Recommended pi extensions
+
+The skills run on a stock pi install. These three give pi the tools Claude Code ships and pi leaves to extensions, and each one is optional: every capability a skill asks for has a documented fallback.
+
+| Extension | What it unlocks | Without it |
+|---|---|---|
+| [`@tintinweb/pi-subagents`](https://www.npmjs.com/package/@tintinweb/pi-subagents) | Subagents. Offload a read only code scan, a web research pass, or `/check review` to a second model, without filling the main context. | Every step that wanted to offload its reading does it inline, and `/check review` asks you to switch your active model instead of spawning a reviewer. |
+| [`@nguyenquangthai/pi-ask`](https://www.npmjs.com/package/@nguyenquangthai/pi-ask) | The interactive question picker. `/scope`, `/architect`, `/develop`, `/check`, and `/document` present their decision panels as a keyboard driven menu with a free text slot. | The same options arrive as plain text, and you answer in your own words. |
+| [`pi-web-access`](https://www.npmjs.com/package/pi-web-access) | Web search and URL fetching. `/architect` can check the current tool landscape, `/scope` can verify the links it cites, and `/audit` can look up Agent Skills and MCP servers. | Those checks are skipped, and the skill says so rather than guessing. |
+
+```bash
+pi install npm:@tintinweb/pi-subagents
+pi install npm:@nguyenquangthai/pi-ask
+pi install npm:pi-web-access
+```
+
+Each one writes to `packages` in `~/.pi/agent/settings.json`. Restart pi afterwards. See [Pi Packages](https://pi.dev/docs/latest/packages).
+
+**The shell tool.** The skills declare `bash`, which pi provides on every platform (Git Bash on Windows). If you would rather the model run commands through PowerShell, [`@4fu/pi-pwsh`](https://www.npmjs.com/package/@4fu/pi-pwsh) adds that tool. Nothing in the skills depends on which one you use.
 
 ## Where to start
 
