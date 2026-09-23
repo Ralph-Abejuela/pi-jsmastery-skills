@@ -30,7 +30,7 @@
   ],
   "scripts": {
     "check": "node scripts/check-portability.mjs",
-    "test": "npm run check",
+    "test": "npm run check && node scripts/check-portability.test.mjs",
     "tokens": "node scripts/analyze-token-usage.mjs",
     "postinstall": "node scripts/install.mjs"
   }

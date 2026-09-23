@@ -43,7 +43,15 @@ import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const SKILLS_DIR = fileURLToPath(new URL('../skills/', import.meta.url));
+// Trailing separator is normalized to `/` so rel paths and override keys are
+// identical on every OS; `join` yields `\` on Windows, which silently broke
+// `isSkillMd`, every SUPPORT_MD_OVERRIDES lookup, and the byte budget table.
+const SKILLS_DIR = fileURLToPath(new URL('../skills/', import.meta.url)).replace(/[\\/]+$/, '/');
+
+// One reader for every file this script inspects, so line endings can never leak
+// into a verdict: a Windows checkout must match CI exactly, and byte budgets must
+// measure content, not the checkout's EOL convention.
+const read = (p) => readFileSync(p, 'utf8').replaceAll('\r\n', '\n');
 const violations = [];
 const warnings = []; // over WARN_AT but still under budget — visible, not fatal
 const sizes = []; // { rel, words, bytes } per .md file, for the word-count report
@@ -206,8 +214,8 @@ const PARSED_LITERALS = new Set([
 const isExemptTerm = (w) => /^[A-Z0-9-]+$/.test(w) || PARSED_LITERALS.has(w);
 
 function check(path) {
-  const rel = path.slice(SKILLS_DIR.length);
-  const text = readFileSync(path, 'utf8');
+  const rel = path.slice(SKILLS_DIR.length).replaceAll('\\', '/');
+  const text = read(path);
   const isSkillMd = rel.endsWith('/SKILL.md');
 
   // Word-count report data (rule 5 companion): track every .md so a size
@@ -314,13 +322,13 @@ walk(SKILLS_DIR.replace(/\/$/, ''));
 for (const group of HOT_PATH_BUDGETS) {
   let bytes = 0;
   for (const rel of group.required) {
-    bytes += Buffer.byteLength(readFileSync(join(SKILLS_DIR, rel), 'utf8'), 'utf8');
+    bytes += Buffer.byteLength(read(join(SKILLS_DIR, rel)), 'utf8');
   }
   if (group.oneOf) {
     let largest = 0;
     let largestRel = '';
     for (const rel of group.oneOf) {
-      const size = Buffer.byteLength(readFileSync(join(SKILLS_DIR, rel), 'utf8'), 'utf8');
+      const size = Buffer.byteLength(read(join(SKILLS_DIR, rel)), 'utf8');
       if (size > largest) {
         largest = size;
         largestRel = rel;
@@ -346,7 +354,7 @@ for (const group of HOT_PATH_BUDGETS) {
 const CONTRACT_BLOCK = /<!-- ([A-Z-]+):START[^>]*-->([\s\S]*?)<!-- \1:END -->/g;
 const contracts = new Map(); // name -> [{ rel, body }]
 for (const s of sizes) {
-  const text = readFileSync(join(SKILLS_DIR, s.rel), 'utf8');
+  const text = read(join(SKILLS_DIR, s.rel));
   for (const [, name, body] of text.matchAll(CONTRACT_BLOCK)) {
     if (!contracts.has(name)) contracts.set(name, []);
     contracts.get(name).push({ rel: s.rel, body: body.trim() });
@@ -375,7 +383,7 @@ for (const entry of readdirSync(SKILLS_DIR)) {
   if (!existsSync(adapter)) {
     violations.push(`${entry}: missing agents/openai.yaml (OpenAI Codex adapter)`);
   } else {
-    const y = readFileSync(adapter, 'utf8');
+    const y = read(adapter);
     for (const field of ['interface:', 'display_name:', 'short_description:', 'default_prompt:']) {
       if (!y.includes(field)) violations.push(`${entry}/agents/openai.yaml: missing \`${field.replace(':', '')}\` field`);
     }

@@ -39,8 +39,8 @@ Any Agent Skills client on macOS, Linux, or Windows:
 
 Do not rely on self-introspection or the "You are powered by…" system prompt line (written at session start, stale the moment the user switches with `/model`): the model cannot reliably name itself. Detect from durable pi config, then confirm.
 
-**1a: Enumerate the models pi actually has — the only ids this skill may ever name.** Everything downstream (the detected author, every picker option, the reviewer) must be one of these ids. Gather them in this order:
-1. **Scoped set (authoritative when present):** `enabledModels` in the project `.pi/settings.json`, falling back to the global `~/.pi/agent/settings.json` — an array of `provider/modelId` patterns; this is exactly what `/scoped-models` shows and Ctrl+P cycles. A non-empty list is the set to use.
+**1a: Enumerate the models pi actually has: the only ids this skill may ever name.** Everything downstream (the detected author, every picker option, the reviewer) must be one of these ids. Gather them in this order:
+1. **Scoped set (authoritative when present):** `enabledModels` in the project `.pi/settings.json`, falling back to the global `~/.pi/agent/settings.json`, an array of `provider/modelId` patterns; this is exactly what `/scoped-models` shows and Ctrl+P cycles. A non-empty list is the set to use.
 2. **Full set (fallback when `enabledModels` is absent/empty):** the ids `pi --list-models` prints, or ask the engineer which models `/model` lists.
 
 Every model id you name in this flow must come out of that enumeration, verbatim: no family shorthand (`sonnet`, `opus`, `haiku`, `fable`), no model you weren't told about, nothing recalled from training. If the enumeration comes up empty, stop and ask the engineer to run `/model` and name the models (or switch to a reviewer manually); never proceed on guessed names.
@@ -63,11 +63,11 @@ Every model id you name in this flow must come out of that enumeration, verbatim
 
 Skip the question only when detection was unambiguous and the user passed an explicit `with <model>` reviewer override (the override settles which model reviews). Otherwise ask.
 
-**1d: Pick the contrasting reviewer — from the enumeration, never by name.** Reviewer candidates are the enumerated ids (1a) minus the author id. There is no mapping table and no family math: the candidates are the ids themselves, one of which is spawned.
+**1d: Pick the contrasting reviewer from the enumeration, never by name.** Reviewer candidates are the enumerated ids (1a) minus the author id. There is no mapping table and no family math: the candidates are the ids themselves, one of which is spawned.
 
 - Present the reviewer choice to the engineer as a picker built from the candidate ids and mark one `(recommended)`: prefer a candidate the enumeration itself signals as capable (a reasoning-capable id, or a non flash/lite/mini/fast id when the list shows that distinction); with no way to rank, recommend the first candidate after the author in the enumeration order. The engineer can pick any candidate.
 - Rules:
-  - The reviewer must never be the same model id as the author — the one invariant this skill exists to guarantee. Compare resolved ids, not aliases.
+  - The reviewer must never be the same model id as the author: the one invariant this skill exists to guarantee. Compare resolved ids, not aliases.
   - Never review on a flash/lite/mini/fast tier id when a stronger candidate exists in the enumeration; review is high-value reasoning.
   - No candidate differs (a one-model scoped set, or a client whose subagents inherit the parent's model, e.g. Antigravity's `invoke_subagent`, which runs on the parent model) → run the review inline on the author's model and say so plainly: a degraded review that shares the author's blind spots, not the cross-model guarantee. When independence matters, prefer switching your active model (below) over accepting the same-model review.
   - If the user passed `with <model>`: honor it only if it differs from the author AND is in the enumeration (pi must be able to spawn it). If it names the author's own model, refuse and explain: "That's the model that wrote the code. Reviewing with it shares its blind spots. Using `<a candidate id>` instead."
